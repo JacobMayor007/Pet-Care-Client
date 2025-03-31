@@ -28,7 +28,7 @@ export default function RegisterAs() {
       key: 1,
       label: "Pet Product Seller",
       icon: faHandshakeSimple,
-      route: "https://seller-pet-care-pro.vercel.app/Sign-Up",
+      route: "https://seller-pet-care-pro.vercel.app/Sign-Up-Seller",
     },
     {
       key: 2,

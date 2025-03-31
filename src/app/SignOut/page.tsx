@@ -11,7 +11,6 @@ export default function Signout() {
             .signOut()
             .then(() => {
               localStorage.clear();
-              console.log("Signed out successfully.");
             })
             .catch((error) => {
               console.error("Error signing out: ", error);
