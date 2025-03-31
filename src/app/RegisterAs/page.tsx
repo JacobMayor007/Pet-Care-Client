@@ -34,7 +34,7 @@ export default function RegisterAs() {
       key: 2,
       label: "Pet Veterinarian",
       icon: faHandHoldingMedical,
-      route: "/Sign-Up/",
+      route: "https://doctor-pet-care-pro.vercel.app",
     },
     {
       key: 3,
