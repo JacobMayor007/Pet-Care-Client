@@ -89,8 +89,12 @@ export default function SignUp() {
 
   const googleAuth = async () => {
     try {
+      if (!checkBox) {
+        alert("Please check the Terms, and Conditions");
+        return new Error("Failed to create user. Please try again.");
+      }
+
       const result = await signInWithPopup(auth, provider);
-      console.log(result.providerId);
 
       const userRef = doc(db, "Users", result.user.uid);
       await setDoc(userRef, {
@@ -113,6 +117,11 @@ export default function SignUp() {
 
   const facebookAuth = async () => {
     try {
+      if (!checkBox) {
+        alert("Please check the Terms, and Conditions");
+        return new Error("Failed to create user. Please try again.");
+      }
+
       const result = await signInWithPopup(
         getAuth(),
         new FacebookAuthProvider()
