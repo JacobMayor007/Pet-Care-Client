@@ -35,7 +35,7 @@ export default function Login() {
       key: 2,
       label: "Pet Vetirinarian",
       type: "doctor",
-      route: "/https://doctor-pet-care-pro.vercel.app/Login",
+      route: "https://doctor-pet-care-pro.vercel.app/Login",
     },
     {
       key: 3,
