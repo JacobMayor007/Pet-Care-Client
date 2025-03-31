@@ -93,10 +93,10 @@ export default function Home() {
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserID(user.uid);
-      } else {
+      if (!user) {
         router.push("/Login");
+      } else {
+        setUserID(user.uid);
       }
     });
 
@@ -244,7 +244,7 @@ export default function Home() {
 
           {products.slice(0, 10).map((data) => {
             return (
-              <a
+              <Link
                 href={`/Product/${data?.id}`}
                 key={data?.id}
                 className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-xl cursor-pointer h-64 transform transition-all active:scale-95 ease-out duration-50 select-none"
@@ -264,7 +264,7 @@ export default function Home() {
                 <button className="row-span-2 bg-blue-500 text-white font-hind rounded-md">
                   View Item
                 </button>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -283,7 +283,7 @@ export default function Home() {
           </div>
           {food.slice(0, 5).map((data) => {
             return (
-              <a
+              <Link
                 href={`/Product${data?.id}`}
                 key={data?.id}
                 className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-xl cursor-pointer h-64 transform transition-all active:scale-95 ease-out duration-50 select-none"
@@ -303,7 +303,7 @@ export default function Home() {
                 <button className="row-span-2 bg-blue-500 text-white font-hind rounded-md">
                   View Item
                 </button>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -392,13 +392,13 @@ export default function Home() {
           <h1 className="font-montserrat text-3xl text-[#393939] font-bold my-4">
             Doctors
           </h1>
-          <a
+          <Link
             href="/Appointments"
             className="text-sm font-montserrat font-bold italic text-[#4ABEC5] flex flex-col gap-1"
           >
             View List Of Doctors
             <span className="w-full h-1 rounded-full bg-[#4ABEC5]" />
-          </a>
+          </Link>
         </div>
         {doctor.slice(0, 5).map((data) => {
           return (

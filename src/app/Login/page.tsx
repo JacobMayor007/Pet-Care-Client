@@ -24,9 +24,19 @@ export default function Login() {
   const [userRoute, setUserRoute] = useState("/");
 
   const loginAsData = [
-    { key: 0, label: "Pet Owner", type: "client", route: "/" },
-    { key: 1, label: "Pet Product Seller", type: "seller", route: "/Provider" },
-    { key: 2, label: "Pet Vetirinarian", type: "doctor", route: "/Doctor" },
+    { key: 0, label: "Pet Owner", type: "client", route: "/Login" },
+    {
+      key: 1,
+      label: "Pet Product Seller",
+      type: "seller",
+      route: "https://seller-pet-care-pro.vercel.app",
+    },
+    {
+      key: 2,
+      label: "Pet Vetirinarian",
+      type: "doctor",
+      route: "/Doctor",
+    },
     {
       key: 3,
       label: "Pet Memorial Provider",
@@ -154,15 +164,6 @@ export default function Login() {
     }
   };
 
-  console.log(
-    "User Type: ",
-    userType,
-    "\nLogin As: ",
-    loginAs,
-    "\nRoute: ",
-    userRoute
-  );
-
   return (
     <div className="bg-login h-screen flex justify-center items-center relative">
       <div className="h-fit w-[600px] bg-white rounded-[20px] flex flex-col items-center p-11 gap-6">
@@ -199,7 +200,8 @@ export default function Login() {
             >
               {loginAsData.map((data) => {
                 return (
-                  <h1
+                  <Link
+                    href={data?.route}
                     key={data?.key}
                     className="hover:bg-slate-300 font-hind font-medium px-4 py-1 cursor-pointer"
                     onClick={() => {
@@ -210,7 +212,7 @@ export default function Login() {
                     }}
                   >
                     {data?.label}
-                  </h1>
+                  </Link>
                 );
               })}{" "}
             </div>
@@ -221,7 +223,7 @@ export default function Login() {
             <div className="relative">
               <label
                 htmlFor="username"
-                className="absolute bottom-9 text-sm bg-white left-3 font-hind tracking-wide"
+                className="absolute bottom-8 text-sm bg-white left-3 font-hind tracking-wide"
               >
                 Email Address
               </label>

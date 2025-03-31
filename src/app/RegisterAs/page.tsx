@@ -4,35 +4,55 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Modal } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBowlRice,
+  faChevronDown,
+  faDove,
+  faHandHoldingMedical,
+  faHandshakeSimple,
+  faHouseUser,
+  faPaw,
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function RegisterAs() {
   const [signUpAs, setSignUpAs] = useState(false);
 
   const registerAsData = [
-    { key: 0, label: "Pet Owner", route: "/Sign-Up", icon: "faPaw" },
+    {
+      key: 0,
+      label: "Pet Owner",
+      icon: faPaw,
+      route: "/Sign-Up",
+    },
     {
       key: 1,
       label: "Pet Product Seller",
+      icon: faHandshakeSimple,
       route: "/Sign-Up/Provider",
-      icon: "faHandshakeSimple",
     },
     {
       key: 2,
       label: "Pet Veterinarian",
+      icon: faHandHoldingMedical,
       route: "/Sign-Up/Doctor",
-      icon: "faHandHoldingMedical",
     },
     {
       key: 3,
+      label: "Pet Sitting Services",
+      icon: faBowlRice,
+      route: "/Sitter",
+    },
+    {
+      key: 4,
       label: "Pet Memorial",
-      icon: "faDove",
+      icon: faDove,
       route: "/Funeral",
     },
-    { key: 4, label: "Pet Sitting Services", route: "/Sitter" },
+
     {
       key: 5,
       label: "Pet Boarding Services",
+      icon: faHouseUser,
       route: "/Renters",
     },
   ];
@@ -49,17 +69,26 @@ export default function RegisterAs() {
       </div>
       <Modal
         open={signUpAs}
+        centered
         onClose={() => setSignUpAs(false)}
         onCancel={() => setSignUpAs(false)}
       >
-        <div>
+        <div className="grid grid-cols-3 gap-5 m-5">
           {registerAsData.map((data) => (
             <Link
               href={data.route}
               key={data.key}
-              className="hover:bg-slate-300 font-hind font-medium px-4 py-1 cursor-pointer text-nowrap text-start block"
+              className="font-hind font-medium h-24 cursor-pointer text-center hover:text-white"
+              onClick={() => setSignUpAs(false)}
             >
-              {data.label}
+              <div className=" border-2 hover:bg-[#006B95] font-montserrat font-bold text-[#466571] rounded-md border-[#006B95] hover:text-white h-full flex flex-col items-center justify-center">
+                <FontAwesomeIcon
+                  icon={data?.icon}
+                  className={`text-2xl text-[#ADD8E6]`}
+                />
+
+                {data?.label}
+              </div>
             </Link>
           ))}
         </div>

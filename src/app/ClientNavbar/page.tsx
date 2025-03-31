@@ -378,6 +378,7 @@ export default function ClientNavbar() {
                   ? `flex absolute top-5 right-12 cursor-pointer transform-gpu ease-in-out duration-300`
                   : `hidden`
               }
+              onClick={() => setShowNotif(false)}
             >
               <UserNotification />
             </div>
