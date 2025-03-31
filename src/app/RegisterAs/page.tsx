@@ -28,13 +28,13 @@ export default function RegisterAs() {
       key: 1,
       label: "Pet Product Seller",
       icon: faHandshakeSimple,
-      route: "/Sign-Up/Provider",
+      route: "https://seller-pet-care-pro.vercel.app/Sign-Up",
     },
     {
       key: 2,
       label: "Pet Veterinarian",
       icon: faHandHoldingMedical,
-      route: "/Sign-Up/Doctor",
+      route: "/Sign-Up/",
     },
     {
       key: 3,

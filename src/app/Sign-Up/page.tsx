@@ -98,6 +98,7 @@ export default function SignUp() {
         User_Email: result.user.email,
         User_UID: result.user.uid,
         CreatedAt: Timestamp.now(),
+        TermsAndConditions: checkBox,
       });
 
       if (result) {
@@ -121,6 +122,7 @@ export default function SignUp() {
         User_Name: result.user.displayName,
         User_Email: result.user.email,
         User_UID: result.user.uid,
+        TermsAndConditions: checkBox,
         CreatedAt: Timestamp.now(),
       });
       if (result) {
