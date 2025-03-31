@@ -29,13 +29,13 @@ export default function Login() {
       key: 1,
       label: "Pet Product Seller",
       type: "seller",
-      route: "https://seller-pet-care-pro.vercel.app",
+      route: "https://seller-pet-care-pro.vercel.app/Login",
     },
     {
       key: 2,
       label: "Pet Vetirinarian",
       type: "doctor",
-      route: "/Doctor",
+      route: "/https://doctor-pet-care-pro.vercel.app/Login",
     },
     {
       key: 3,
