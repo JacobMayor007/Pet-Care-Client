@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientNavbar from "./ClientNavbar/page";
 
 export const metadata: Metadata = {
   title: "Pet Care Pro",
