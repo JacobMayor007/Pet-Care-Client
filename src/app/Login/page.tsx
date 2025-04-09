@@ -73,23 +73,13 @@ export default function Login() {
     try {
       setLoading(true);
 
-      if (userType === "client") {
-        await signingIn(email, password);
-        return router.push(userRoute);
+      const result = await signingIn(email, password);
+      if (result) {
+        return router.push("/");
+      } else {
+        alert("Login credentials is invalid, please try again!");
+        throw new Error("Error no account!");
       }
-      const docRef = collection(db, userType);
-      const q = query(docRef, where("User_Email", "==", email));
-      const docSnap = await getDocs(q);
-      if (!docSnap.empty) {
-        await signingIn(email, password);
-        return router.push(`${userRoute}`);
-      } else
-        return (
-          router.push("/Login"),
-          alert(
-            `This account is does not exist on ${loginAs}, go to the Sign Up Page if you want to register as ${loginAs}`
-          )
-        );
     } catch (err) {
       console.error(err);
       return alert("Invalid Email, and Password. Please try again");

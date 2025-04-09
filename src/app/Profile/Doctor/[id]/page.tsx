@@ -24,7 +24,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 // import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { DatePicker, Modal } from "antd";
+import { DatePicker, Modal, Select } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { db } from "@/app/firebase/config";
 import { getMyPets } from "@/app/Appointments/mypet";
@@ -35,18 +35,33 @@ interface doctorID {
 
 interface Doctor {
   id?: string;
-  CreatedAt?: string;
+  User_Email?: string;
+  User_Name?: string;
+  User_UID?: string;
+  User_UserType?: string;
+  User_PNumber?: string;
+  User_TypeOfAppointment?: [string];
   User_AvailableHours?: {
     Days?: [number];
   };
-  User_Email?: string;
-  User_Name?: string;
-  User_Location?: string;
-  User_PNumber?: string;
-  User_TypeOfAppointment?: [string];
-  User_UID?: string;
-  User_UserType?: string;
-  User_Details?: string;
+  doctor_details?: string;
+  doctor_available_days?: [];
+  doctor_clinicAddress?: string;
+  doctor_clinicName?: string;
+  doctor_contact?: string;
+  doctor_email?: string;
+  doctor_experience?: string;
+  doctor_license_number?: string;
+  doctor_name?: string;
+  doctor_pet_types_treated?: [];
+  doctor_rating?: number;
+  doctor_specialty?: string;
+  doctor_standard_fee?: number;
+  doctor_sub_specialty?: string;
+  doctor_time_in?: string;
+  doctor_time_out?: string;
+  doctor_title?: string;
+  doctor_uid?: string;
 }
 
 interface MyPets {
@@ -168,11 +183,89 @@ function DoctorProfile(props: { id: string }) {
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [myPets, setMyPets] = useState<MyPets[]>([]);
   const [petTypeAnimal, setPetTypeAnimal] = useState("");
-  // const [typeOfPayment, setTypeOfPayment] = useState("");
   const [userAppointment, setUserAppointment] = useState("");
   const [showAppointments, setShowAppointments] = useState(false);
   const [confirmModal, setConfirmModal] = useState(false);
   const [selectedPet, setSelectedPet] = useState<MyPets | null>(null);
+  const [doctorSkill, setDoctorSkill] = useState("");
+  // const appointment_type = [
+  //   {
+  //     key: 0,
+  //     value: "Surgery",
+  //     label: "Surgery",
+  //   },
+
+  //   {
+  //     key: 1,
+  //     value: "Dentistry",
+  //     label: "Dentistry",
+  //   },
+  //   {
+  //     key: 2,
+  //     value: "Dermatology",
+  //     label: "Dermatology",
+  //   },
+  //   {
+  //     key: 3,
+  //     value: "Anesthesia",
+  //     label: "Anesthesia",
+  //   },
+  //   {
+  //     key: 4,
+  //     value: "Behavior",
+  //     label: "Behavior",
+  //   },
+  //   {
+  //     key: 5,
+  //     value: "Cardiology",
+  //     label: "Cardiology",
+  //   },
+  //   {
+  //     key: 6,
+  //     value: "Internal Medicine",
+  //     label: "Internal Medicine",
+  //   },
+  //   {
+  //     key: 7,
+  //     value: "Neurology",
+  //     label: "Neurology",
+  //   },
+  //   {
+  //     key: 8,
+  //     value: "Oncology",
+  //     label: "Oncology",
+  //   },
+  //   {
+  //     key: 9,
+  //     value: "Ophthalmology",
+  //     label: "Ophthalmology",
+  //   },
+  //   {
+  //     key: 10,
+  //     value: "Theriogenology",
+  //     label: "Theriogenology",
+  //   },
+  //   {
+  //     key: 11,
+  //     value: "Exotic Companion Mammal Practice",
+  //     label: "Exotic Companion Mammal Practice",
+  //   },
+  //   {
+  //     key: 12,
+  //     value: "Avian Medicine",
+  //     label: "Avian Medicine",
+  //   },
+  //   {
+  //     key: 13,
+  //     value: "Reptile/Amphibian Practice",
+  //     label: "Reptile/Amphibian Practice",
+  //   },
+  //   {
+  //     key: 14,
+  //     value: "Canine/Feline Practice",
+  //     label: "Canine/Feline Practice",
+  //   },
+  // ];
 
   useEffect(() => {
     const closeShowAppointments = (e: MouseEvent) => {
@@ -239,7 +332,7 @@ function DoctorProfile(props: { id: string }) {
   }, [props.id]);
 
   const submitDateAppointment = () => {
-    if (!date || !userAppointment) {
+    if (!date) {
       alert("Please input fields");
       return;
     } else {
@@ -256,6 +349,8 @@ function DoctorProfile(props: { id: string }) {
   }
 
   const onSubmit = async (id: string) => {
+    console.log("On Submit ID: ", id);
+
     const fullName = userData[0]?.User_Name;
 
     try {
@@ -271,7 +366,7 @@ function DoctorProfile(props: { id: string }) {
           : new Date(date) // Convert to Date if it's a string
       );
 
-      const matchingDoctor = doctor.find((data) => data.User_UID === id);
+      const matchingDoctor = doctor.find((data) => data.doctor_uid === id);
 
       if (!matchingDoctor) {
         throw new Error("Matching doctor not found.");
@@ -282,7 +377,7 @@ function DoctorProfile(props: { id: string }) {
       const docNotifRef = collection(db, "notifications");
       const q = query(
         docRef,
-        where("Appointment_DoctorUID", "==", matchingDoctor.User_UID),
+        where("Appointment_DoctorUID", "==", matchingDoctor.doctor_uid),
         where("Appointment_PatientUserUID", "==", patientUserUID)
       );
       const querySnapshot = await getDocs(q);
@@ -294,13 +389,13 @@ function DoctorProfile(props: { id: string }) {
         Appointment_PatientFullName: fullName,
         Appointment_CreatedAt: Timestamp.now(),
         Appointment_PatientUserUID: patientUserUID,
-        Appointment_DoctorEmail: matchingDoctor?.User_Email,
-        Appointment_DoctorName: matchingDoctor?.User_Name,
-        Appointment_TypeOfAppointment: userAppointment,
+        Appointment_DoctorEmail: matchingDoctor?.doctor_email,
+        Appointment_DoctorName: matchingDoctor?.doctor_name,
+        Appointment_TypeOfAppointment: doctorSkill,
         Appointment_Date: appointmentDate,
-        Appointment_DoctorUID: matchingDoctor.User_UID,
-        Appointment_Location: matchingDoctor.User_Location,
-        Appointment_DoctorPNumber: matchingDoctor.User_PNumber,
+        Appointment_DoctorUID: matchingDoctor.doctor_uid,
+        Appointment_Location: matchingDoctor.doctor_clinicAddress,
+        Appointment_DoctorPNumber: matchingDoctor.doctor_contact,
         Appointment_PatientPetAge: {
           Year: selectedPet ? selectedPet?.pet_age?.year : petYear,
           Month: selectedPet ? selectedPet.pet_age?.month : petMonth,
@@ -326,16 +421,16 @@ function DoctorProfile(props: { id: string }) {
       const notifAppointments = await addDoc(docNotifRef, {
         appointment_ID: addAppointments.id,
         createdAt: Timestamp.now(),
-        receiverID: matchingDoctor.User_UID,
+        receiverID: matchingDoctor.doctor_uid,
         hide: false,
         message: `${fullName} requesting to have a schedule`,
         senderID: patientUserUID,
         open: false,
         status: "unread",
-        title: `Appointment Request with ${matchingDoctor?.User_UID}`,
+        title: `Appointment Request with ${matchingDoctor?.doctor_uid}`,
         type: userAppointment,
         sender_FullName: fullName,
-        receiver_FullName: matchingDoctor?.User_Name,
+        receiver_FullName: matchingDoctor?.doctor_name,
         isApprove: false,
       });
 
@@ -368,6 +463,26 @@ function DoctorProfile(props: { id: string }) {
   //   return null;
   // };
 
+  const doctor_skill = [{}];
+
+  doctor?.forEach((data, index) => {
+    if (data?.doctor_specialty) {
+      doctor_skill.push({
+        key: `${index}-specialty`,
+        value: data.doctor_specialty,
+        label: data.doctor_specialty,
+      });
+    }
+
+    if (data?.doctor_sub_specialty) {
+      doctor_skill.push({
+        key: `${index}-sub-specialty`,
+        value: data.doctor_sub_specialty,
+        label: data.doctor_sub_specialty,
+      });
+    }
+  });
+
   return (
     <div className="h-full mx-52 py-4">
       {isDoctor ? (
@@ -387,15 +502,15 @@ function DoctorProfile(props: { id: string }) {
           return (
             <div key={data?.id} className="grid grid-cols-5 w-full">
               <div className="h-48 w-48 text-center rounded-full bg-white drop-shadow-lg flex justify-center items-center font-montserrat text-xl">
-                Image of {data?.User_Name}
+                Image of {data?.doctor_name}
               </div>
-              <div className="flex flex-col gap-4 w-full col-span-4">
+              <div className="flex flex-col gap-4 w-full col-span-4 ">
                 <h1
-                  className={`font-montserrat font-bold text-4xl ${
+                  className={`font-montserrat capitalize font-bold text-4xl ${
                     isDoctor ? `hidden` : `flex`
                   } justify-between`}
                 >
-                  Dr. {data?.User_Name}{" "}
+                  {data?.doctor_title} {data?.doctor_name}
                   <span
                     className="text-lg flex items-center gap-2 px-4 rounded-full cursor-pointer bg-green-500 text-white"
                     onClick={() => setDateModal(true)}
@@ -410,11 +525,11 @@ function DoctorProfile(props: { id: string }) {
                     icon={faMapPin}
                     className="mr-2 text-red-500"
                   />{" "}
-                  {data?.User_Location}
+                  {data?.doctor_clinicAddress}
                 </p>
                 <p className="font-montserrat text-lg">
                   <FontAwesomeIcon icon={faPhone} className="mr-2" />{" "}
-                  {data?.User_PNumber}
+                  {data?.doctor_contact}
                 </p>
                 <p className="font-montserrat text-lg">
                   {" "}
@@ -422,7 +537,7 @@ function DoctorProfile(props: { id: string }) {
                     icon={faEnvelope}
                     className="mr-2 text-slate-400"
                   />{" "}
-                  {data?.User_Email}
+                  {data?.doctor_email}
                 </p>
               </div>
             </div>
@@ -445,49 +560,41 @@ function DoctorProfile(props: { id: string }) {
                   )}
                 </h1>
                 <p className="flex flex-col gap-4 font-montserrat font-medium text-[#393939] pr-20 leading-7 text-justify">
-                  {data?.User_Details}
+                  {data?.doctor_details}
                 </p>
               </div>
               <div className="flex flex-col gap-4">
                 <h1 className="font-montserrat font-bold text-3xl flex justify-between cursor-pointer">
                   Services
-                  {isDoctor ? (
-                    <span className="mr-20">
-                      <FontAwesomeIcon icon={faPlus} />
-                    </span>
-                  ) : (
-                    <span className="hidden" />
-                  )}
                 </h1>
-                <ul className="bg-white drop-shadow-lg w-80 py-4 rounded-md">
-                  {data?.User_TypeOfAppointment?.map((data, index) => {
-                    return (
-                      <li
-                        key={index}
-                        className="font-hind list-disc mt-4 mx-10"
-                      >
-                        {" "}
-                        {data.split(",")}{" "}
-                      </li>
-                    );
-                  })}
+                <ul className="bg-white font-hind text-center text-xl drop-shadow-lg w-80 py-4 rounded-md">
+                  <li>{data?.doctor_specialty}</li>
                 </ul>
               </div>
-              <div className="flex flex-col w-96 mb-8">
-                <h1 className="font-montserrat font-bold text-4xl mb-5">
+              <div className=" w-fit mb-8 h-52 bg-white drop-shadow-md rounded-md items-center p-4 grid grid-cols-3">
+                <h1 className=" col-span-3 font-montserrat font-bold text-4xl mb-5">
                   Working Hours
                 </h1>
-                {data?.User_AvailableHours?.Days?.map((day, dayIndex) => {
-                  const weekDay = weeks.find((week) => week.key === day)?.label;
-                  return (
-                    <p
-                      key={dayIndex}
-                      className="font-montserrat font-bold ml-10 mb-1"
-                    >
-                      {weekDay}
-                    </p>
-                  );
-                })}
+                <span className="grid grid-cols-3 items-start mr-4 bg-[#006B95] text-white p-4 rounded-md">
+                  {data?.doctor_available_days?.map((day, dayIndex) => {
+                    const weekDay = weeks.find(
+                      (week) => week.key === day
+                    )?.label;
+                    return (
+                      <span key={dayIndex} className="text-center">
+                        {weekDay}
+                      </span>
+                    );
+                  })}
+                </span>
+                <div className="text-center">
+                  <h1>Time In:</h1>
+                  {data?.doctor_time_in}
+                </div>
+                <div className="text-center">
+                  <h1>Time Out:</h1>
+                  {data?.doctor_time_out}
+                </div>
               </div>
             </div>
           );
@@ -506,7 +613,7 @@ function DoctorProfile(props: { id: string }) {
         <h1 className="text-center my-8 font-montserrat font-bold text-[#006B95] text-xl">
           Select Date
         </h1>
-        <div className="flex items-center justify-around">
+        <div className="flex flex-col gap-5 items-center justify-around">
           <DatePicker
             format={"MMMM DD, YYYY"}
             needConfirm
@@ -514,28 +621,18 @@ function DoctorProfile(props: { id: string }) {
             value={date}
             onChange={(date: Dayjs | null) => setDate(date)}
           />
+          <Select
+            allowClear
+            onChange={(value: string) => {
+              setDoctorSkill(value);
+            }}
+            placeholder="Select a type of appointment"
+            options={doctor_skill}
+            optionFilterProp="label"
+            className="w-full"
+          />
         </div>
         <div>
-          <div
-            className={`h-8 w-96 bg-white rounded-lg drop-shadow-md ml-9 mt-8 cursor-pointer `}
-            onClick={() => setShowAppointments(true)}
-          >
-            <input
-              type="text"
-              id="userAppointment"
-              name="user-appointment"
-              placeholder="Please select your type of service"
-              onClick={() =>
-                setShowAppointments(userAppointment ? false : false)
-              }
-              className={`h-full w-full outline-none font-hind text-black font-medium autofill:bg-white px-3 rounded-lg ${
-                userAppointment
-                  ? `bg-white cursor-pointer`
-                  : `bg-[#D6EBEC] focus:outline-none focus:text-black`
-              }`}
-              value={userAppointment}
-            />
-          </div>
           <div
             ref={divRef}
             className={`absolute top-[220px] left-0 bg-white w-full rounded-md drop-shadow-xl z-20 `}
@@ -588,7 +685,7 @@ function DoctorProfile(props: { id: string }) {
         }}
       >
         <p className="font-montserrat font-bold text-[#393939]">
-          Do you wish to have an appointment with {doctor[0]?.User_Name}
+          Do you wish to have an appointment with {doctor[0]?.doctor_name}
         </p>
         <div className="grid grid-cols-3 items-center w-fit my-5 gap-4">
           {myPets.length > 0 ? (
@@ -784,7 +881,7 @@ function DoctorProfile(props: { id: string }) {
         open={confirmModal}
         onCancel={() => setConfirmModal(false)}
         onOk={() => {
-          onSubmit(doctor[0]?.User_UID || "");
+          onSubmit(doctor[0]?.doctor_uid || "");
           setConfirmModal(false);
         }}
         centered={true}

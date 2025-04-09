@@ -7,7 +7,6 @@ import fetchProduct, {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileShield } from "@fortawesome/free-solid-svg-icons";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import ClientNavbar from "./ClientNavbar/page";
 import Image from "next/image";
 import fetchRoom from "./fetchData/fetchRoom";
@@ -76,6 +75,23 @@ interface Doctor {
   User_AvailableHours?: {
     Days?: [number];
   };
+  doctor_available_days?: [];
+  doctor_clinicAddress?: string;
+  doctor_clinicName?: string;
+  doctor_contact?: string;
+  doctor_email?: string;
+  doctor_experience?: string;
+  doctor_license_number?: string;
+  doctor_name?: string;
+  doctor_pet_types_treated?: [];
+  doctor_rating?: number;
+  doctor_specialty?: string;
+  doctor_standard_fee?: number;
+  doctor_sub_specialty?: string;
+  doctor_time_in?: string;
+  doctor_time_out?: string;
+  doctor_title?: string;
+  doctor_uid?: string;
 }
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -88,14 +104,10 @@ export default function Home() {
   const [doctor, setDoctor] = useState<Doctor[]>([]);
   const [doctorID, setDoctorID] = useState("");
 
-  const router = useRouter();
-
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push("/Login");
-      } else {
+      if (user) {
         setUserID(user.uid);
       }
     });
@@ -141,30 +153,37 @@ export default function Home() {
   const weeks = [
     {
       key: 0,
+      value: 0,
       label: "Sunday",
     },
     {
       key: 1,
+      value: 1,
       label: "Monday",
     },
     {
       key: 2,
+      value: 2,
       label: "Tuesday",
     },
     {
       key: 3,
+      value: 3,
       label: "Wednesday",
     },
     {
       key: 4,
+      value: 4,
       label: "Thursday",
     },
     {
       key: 5,
+      value: 5,
       label: "Friday",
     },
     {
       key: 6,
+      value: 6,
       label: "Saturday",
     },
   ];
@@ -414,24 +433,15 @@ export default function Home() {
               </div>
               <div className="row-span-11 flex flex-col justify-between gap-2 mt-16">
                 <div className="font-hind font-bold text-xl text-white text-center">
-                  {data?.User_Name}
+                  {data?.doctor_name}
                 </div>
-                <h1 className="text-center font-hind text-base text-white font-medium row-span-5 grid grid-cols-2 gap-2 mt-2 bg-blue-500 rounded-sm py-2">
-                  <span className="col-span-2">Appointment Type:</span>
-                  {data?.User_TypeOfAppointment?.map((data, index) => {
-                    return (
-                      <span
-                        key={index}
-                        className="overflow-hidden text-ellipsis whitespace-nowrap"
-                      >
-                        {data}
-                      </span>
-                    );
-                  })}
+                <h1 className="text-center font-hind text-base text-white font-medium row-span-5 gap-2 mt-2 bg-blue-500 rounded-sm py-2">
+                  Appointment Type:
+                  <span className="block"> {data?.doctor_specialty}</span>
                 </h1>{" "}
                 <h1 className="text-center font-hind text-white font-medium row-span-5 bg-red-500 py-2 rounded-lg">
                   Available Days: <br />
-                  <span className="grid grid-cols-3 items-start">
+                  {/* <span className="grid grid-cols-3 items-start">
                     {data?.User_AvailableHours?.Days?.length ? (
                       data.User_AvailableHours.Days.map((day, dayIndex) => {
                         const weekDay = weeks.find(
@@ -446,10 +456,18 @@ export default function Home() {
                     ) : (
                       <span>No available days</span>
                     )}
+                  </span> */}
+                  <span className="grid grid-cols-3 items-start">
+                    {data?.doctor_available_days?.map((day, dayIndex) => {
+                      const weekDay = weeks.find(
+                        (week) => week.key === day
+                      )?.label;
+                      return <span key={dayIndex}>{weekDay}</span>;
+                    })}
                   </span>
                 </h1>
                 <Link
-                  href={`/Profile/Doctor/${data?.User_UID}`}
+                  href={`/Profile/Doctor/${data?.doctor_uid}`}
                   className="row-span-2 bg-white font-hind rounded-md h-10 transform transition-all active:scale-95 ease-out duration-50 flex items-center justify-center"
                 >
                   View Doctor

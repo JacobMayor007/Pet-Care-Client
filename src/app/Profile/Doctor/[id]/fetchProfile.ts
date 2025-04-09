@@ -4,7 +4,7 @@ import { collection, where, query, getDocs } from "firebase/firestore";
 const fetchProfile = async (userUID: string) => {
    try{
     const docRef = collection(db, "doctor");
-    const userUIDField = where("User_UID", "==", userUID);
+    const userUIDField = where("doctor_uid", "==", userUID);
     const q = query(docRef, userUIDField);
 
     const docSnap = await getDocs(q)

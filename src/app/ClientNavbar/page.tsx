@@ -266,7 +266,9 @@ export default function ClientNavbar() {
         </ul>
         <div className="flex items-center gap-4" ref={btnRef}>
           <div className="relative  flex gap-2">
-            <SearchOutlined className="text-[#006B95] font-bold text-lg cursor-pointer" />
+            <Link href="/Search">
+              <SearchOutlined className="text-[#006B95] font-bold text-lg cursor-pointer" />
+            </Link>
             <BellOutlined
               className="text-[#006B95] font-bold"
               onClick={() => {
