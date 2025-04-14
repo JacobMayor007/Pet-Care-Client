@@ -89,7 +89,7 @@ interface Order {
         const q = query(ordersRef, where("OC_Products.OC_ProductID", "==", item_ID));
         const querySnapshot = await getDocs(q);
   
-        let ratingArray: number[] = [];
+        const ratingArray: number[] = [];
         querySnapshot.forEach((doc) => {
           const orderData = doc.data();
           const rating = orderData.OC_RatingAndFeedback?.rating;
