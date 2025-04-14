@@ -129,7 +129,7 @@ export default function Shop() {
             {food.slice(0, 5).map((data) => {
               return (
                 <a
-                  href={`/Product${data?.id}`}
+                  href={`/Product/${data?.id}`}
                   key={data?.id}
                   className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-xl cursor-pointer h-64 transform transition-all active:scale-95 ease-out duration-50 select-none"
                 >
@@ -160,7 +160,12 @@ export default function Shop() {
             </div>
             {item.slice(0, 5).map((data) => {
               return (
-                <Link href="/Product" key={data?.id} passHref legacyBehavior>
+                <Link
+                  href={`/Product/${data?.id}`}
+                  key={data?.id}
+                  passHref
+                  legacyBehavior
+                >
                   <a
                     key={data?.id}
                     className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-xl cursor-pointer h-64 transform transition-all active:scale-95 ease-out duration-50 select-none"
