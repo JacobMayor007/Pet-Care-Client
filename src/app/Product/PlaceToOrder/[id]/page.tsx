@@ -184,7 +184,7 @@ export default function PlaceToOrder({ params }: ProductID) {
 
       const notifRef = await addDoc(docNotifRef, {
         senderID: buyerUID,
-        productID: id,
+        order_ID: docRef.id,
         createdAt: Timestamp.now(),
         hide: false,
         message: `${fullName} wants to buy your ${product.Seller_ProductName} product`,

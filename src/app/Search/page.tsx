@@ -1,7 +1,7 @@
 "use client";
 
 import { DatePicker, Modal, Rate, Select } from "antd";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "@ant-design/v5-patch-for-react-19";
 import {
   collection,
@@ -18,8 +18,8 @@ import Link from "next/link";
 
 interface Doctor {
   id?: string;
-  doctor_available_days?: number[]; // Array of numbers representing days
-  doctor_pet_types_treated?: string[]; // Array of strings representing pet types
+  doctor_available_days?: number[];
+  doctor_pet_types_treated?: string[];
   doctor_clinicAddress?: string;
   doctor_clinicName?: string;
   doctor_contact?: string;
@@ -37,6 +37,19 @@ interface Doctor {
   doctor_uid?: string;
 }
 
+interface Product {
+  id: string;
+  Seller_PaymentMethod?: string;
+  Seller_TotalPrice?: string;
+  Seller_ProductName?: string;
+  Seller_ProductDescription?: string;
+  Seller_ProductPrice?: number;
+  Seller_UserID?: string;
+  Seller_ProductFeatures?: string;
+  Seller_UserFullName?: string;
+  Seller_TotalRating?: number;
+}
+
 export default function Search() {
   const [providerModal, setProviderModal] = useState(true);
   const [serviceModal, setServiceModal] = useState(false);
@@ -47,6 +60,8 @@ export default function Search() {
   const [animalModal, setAnimalModal] = useState(false);
   const [provider, setProvider] = useState("");
   const [service, setService] = useState("");
+  const [product, setProduct] = useState<Product[]>([]);
+  const [filteredProduct, setFilteredProduct] = useState<Product[]>([]);
   // const [location, setLocation] = useState("");
   const [docSearch, setDocSearch] = useState<Doctor[]>([]);
   const [rating, setRating] = useState(0);
@@ -284,25 +299,44 @@ export default function Search() {
     },
   ];
 
-  console.log("Week: ", date?.toDate().getDay());
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const searchRef = collection(db, "products");
+        const querySnapshot = await getDocs(searchRef);
+
+        const products = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setProduct(products);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getProducts();
+  }, []);
 
   const searchHandle = async () => {
     try {
       setLoading(true);
       setSearchFilter(true);
-
+      const searchRef = collection(db, provider);
       if (provider === "doctor") {
-        // Validate date before proceeding
         if (!date) {
           throw new Error("Please select a valid date.");
         }
 
-        const searchRef = collection(db, provider);
+        const logical = pricing === 2501 ? `>=` : `<`;
+
+        console.log("Logical: ", logical);
+
         const q = query(
           searchRef,
           where("doctor_specialty", "==", service),
           where("doctor_rating", "==", rating),
-          where("doctor_standard_fee", "<", pricing),
+          where("doctor_standard_fee", logical, pricing),
           where(
             "doctor_available_days",
             "array-contains",
@@ -312,31 +346,38 @@ export default function Search() {
 
         const docSnap = await getDocs(q);
 
-        // Map the results and explicitly type them as Doctor[]
         const doctorSearch: Doctor[] = docSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Doctor[];
 
-        // Apply client-side filtering for the second array-contains
         const filteredDoctors = doctorSearch.filter((doc) =>
           doc.doctor_pet_types_treated?.includes(animal)
         );
 
-        // Update state with the filtered results
         setDocSearch(filteredDoctors);
 
-        // Provide feedback if no results are found
         if (filteredDoctors.length === 0) {
           console.warn("No matching doctors found.");
         }
       }
+
+      if (provider === "seller") {
+        const filteredProducts = product.filter(
+          (doc) =>
+            doc.Seller_ProductName?.includes(service) &&
+            doc.Seller_TotalRating === rating &&
+            doc.Seller_ProductDescription?.includes(service) &&
+            doc.Seller_ProductPrice &&
+            0 <= pricing
+        );
+
+        setFilteredProduct(filteredProducts);
+      }
     } catch (error) {
-      // Handle errors gracefully
       console.error("Error during search:", error);
       alert(`An error occurred: ${error}`);
     } finally {
-      // Ensure loading state is reset
       setLoading(false);
     }
   };
@@ -398,11 +439,11 @@ export default function Search() {
                       </div>
                       <div className="flex flex-col gap-2">
                         <h1 className="font-hind text-[#292929] font-semibold">
-                          Time Check_In:{" "}
+                          Check_In:{" "}
                           <span className="block">{data?.doctor_time_in}</span>
                         </h1>
                         <h1 className="font-hind text-[#292929] font-semibold">
-                          Time Check_Out:{" "}
+                          Check_Out:{" "}
                           <span className="block">{data?.doctor_time_out}</span>
                         </h1>
                       </div>
@@ -424,6 +465,57 @@ export default function Search() {
                       className="absolute top-4 right-5 border-b-2 border-[#006B95] px-2 text-[#006B95] italic"
                     >
                       View Profile Doctor
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {!loading && provider === "seller" && (
+            <div>
+              <div className="relative z-20">
+                <ClientNavbar />
+              </div>
+              <h1 className="font-montserrat font-bold text-2xl text-[#393939] mx-56 my-10">
+                List Of Products:{" "}
+              </h1>
+              {filteredProduct.map((data, index) => {
+                return (
+                  <div
+                    key={index}
+                    className="mx-56 grid grid-cols-5 p-4 border-[1px] border-slate-300 h-48 rounded-lg drop-shadow-md bg-white"
+                  >
+                    <div className=" font-hind text-[#393939] h-16 w-16 rounded-full m-auto border-[1px] border-[#393939] overflow-hidden">
+                      Image of {data?.Seller_ProductName}
+                    </div>
+                    <div className="col-span-2 my-auto flex flex-col gap-1">
+                      <h1 className="capitalize font-montserrat font-bold text-[#393939]">
+                        {data?.Seller_UserFullName}
+                      </h1>
+                      <h1 className="font-montserrat font-bold text-[#006B95]">
+                        {" "}
+                        {data?.Seller_ProductName}
+                      </h1>
+                      <h1 className="font-montserrat font-bold text-[#393939]">
+                        Type of Payment:
+                        <span className="block text-[#006B95]">
+                          {data?.Seller_PaymentMethod}
+                        </span>
+                      </h1>
+                    </div>
+                    <h1 className="m-auto font-montserrat font-bold text-lg text-[#393939]">
+                      Php {data?.Seller_ProductPrice}
+                    </h1>
+                    <Rate
+                      value={data?.Seller_TotalRating}
+                      disabled
+                      className="m-auto"
+                    />
+                    <Link
+                      href={`/Product/${data?.id}`}
+                      className="font-hind italic text-[#006B95] absolute right-9 top-4 border-b-2 border-[#006B95] text-center w-28"
+                    >
+                      View Product
                     </Link>
                   </div>
                 );
@@ -485,7 +577,24 @@ export default function Search() {
                 />
               </div>
             )}
-            {provider === "seller" && <div>{provider}</div>}
+            {provider === "seller" && (
+              <div className="">
+                <label
+                  htmlFor="product-id"
+                  className="font-montserrat font-bold text-lg text-[#393939]"
+                >
+                  Enter your product
+                </label>
+                <input
+                  type="text"
+                  name="product"
+                  id="product-id"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  className="block h-10 py-2 px-2 w-3/4 rounded-md border-[1.5px] text-[#393939]  font-semibold border-[#393939] outline-none font-hind "
+                />
+              </div>
+            )}
             {provider === "room-provider" && <div>{provider}</div>}
           </Modal>
           {/* <Modal
@@ -536,6 +645,7 @@ export default function Search() {
             onOk={() => {
               setChronoModal(provider !== "seller" ? true : false);
               setPricingModal(false);
+              setAnimalModal(true);
             }}
             onClose={() => history.back()}
           >
@@ -614,12 +724,32 @@ export default function Search() {
                   {provider}
                 </span>
               </h1>
-              <h1 className="text-xl capitalize font-montserrat mx-8 text-center font-medium bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
-                Service Type:
-                <span className="block text-2xl text-white font-bold">
-                  {service}
-                </span>
-              </h1>
+              {provider === "doctor" && (
+                <h1 className="text-xl capitalize font-montserrat mx-8 text-center font-medium bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
+                  Service Type:
+                  <span className="block text-2xl text-white font-bold">
+                    {service}
+                  </span>
+                </h1>
+              )}
+              {provider === "seller" && (
+                <h1 className="text-xl capitalize font-montserrat mx-8 text-center font-medium bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
+                  Product:
+                  <span className="block text-2xl text-white font-bold">
+                    {service}
+                  </span>
+                </h1>
+              )}
+              {!provider ? (
+                <h1 className="text-xl capitalize font-montserrat mx-8 text-center font-medium bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
+                  Service Type:
+                  <span className="block text-2xl text-white font-bold">
+                    {service}
+                  </span>
+                </h1>
+              ) : (
+                <div></div>
+              )}
             </div>
             <div className="flex flex-col mx-8 gap-10 text-white bg-white drop-shadow-md rounded-lg">
               <div className="w-full h-56 bg-dashboard  rounded-lg">
@@ -643,31 +773,37 @@ export default function Search() {
                   {pricing !== 2501 ? `${pricing} below` : `${pricing} above`}{" "}
                 </span>
               </h1>
-              <h1 className="text-xl capitalize font-montserrat text-center font-medium  mx-8  bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
-                Date:
-                <span className="block text-2xl text-white font-bold">
-                  {date?.toDate().toDateString()}
-                </span>
-              </h1>
+              {provider === "seller" ? (
+                <div></div>
+              ) : (
+                <h1 className="text-xl capitalize font-montserrat text-center font-medium  mx-8  bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
+                  Date:
+                  <span className="block text-2xl text-white font-bold">
+                    {date?.toDate().toDateString()}
+                  </span>
+                </h1>
+              )}
             </div>
-            <div className="flex flex-col mx-8 gap-24 bg-white drop-shadow-md rounded-lg">
-              <div className="w-full h-56 bg-dashboard  rounded-lg">
-                <Image
-                  alt={`asdasdasd`}
-                  src={`/doctor.svg`}
-                  width={110}
-                  height={50}
-                  className="object-contain w-full h-full"
-                />
-              </div>
+            {provider !== "seller" && (
+              <div className="flex flex-col mx-8 gap-24 bg-white drop-shadow-md rounded-lg">
+                <div className="w-full h-56 bg-dashboard  rounded-lg">
+                  <Image
+                    alt={`asdasdasd`}
+                    src={`/doctor.svg`}
+                    width={110}
+                    height={50}
+                    className="object-contain w-full h-full"
+                  />
+                </div>
 
-              <h1 className="text-xl capitalize font-montserrat text-center font-medium  mx-8  bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
-                Animal:
-                <span className="block text-2xl text-white font-bold">
-                  {animal}
-                </span>
-              </h1>
-            </div>
+                <h1 className="text-xl capitalize font-montserrat text-center font-medium  mx-8  bg-[#006B95] px-12 py-6 text-white drop-shadow-md rounded-md">
+                  Animal:
+                  <span className="block text-2xl text-white font-bold">
+                    {animal}
+                  </span>
+                </h1>
+              </div>
+            )}
           </div>
           <div
             className="place-self-end px-10 pt-2 pb-10"

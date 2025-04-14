@@ -57,15 +57,26 @@ export default function Details({ params }: DetailsProps) {
     order_ID: string,
     sellerID: string,
     buyerUID: string,
-    item: string
+    item: string,
+    item_ID: string
   ) => {
     try {
       if (!order_ID) {
         throw "Order ID is undefined";
       }
-      feedbackOrder(feedback, star, order_ID, sellerID, buyerUID, item);
+      await feedbackOrder(
+        feedback,
+        star,
+        order_ID,
+        sellerID,
+        buyerUID,
+        item,
+        item_ID
+      );
     } catch (error) {
       console.error(error);
+    } finally {
+      window.location.reload();
     }
   };
 
@@ -92,7 +103,7 @@ export default function Details({ params }: DetailsProps) {
             Price
           </h1>
           <h1 className="font-montserrat text-3xl font-bold text-[#393939] justify-self-center">
-            Status
+            {listOfOrders?.OC_RatingAndFeedback?.rating ? `Rating` : `Status`}
           </h1>
           <div className="w-full h-0.5 rounded-full bg-[#B1B1B1] col-span-5 flex flex-col" />
 
@@ -132,24 +143,29 @@ export default function Details({ params }: DetailsProps) {
             <div className="justify-self-center font-hind text-[#232323] text-xl font-medium">
               Php {listOfOrders?.OC_TotalPrice}
             </div>
-            <div>
+            <div className="">
               {listOfOrders?.OC_Status === "shipped" ? (
-                listOfOrders?.OC_Status
+                <h1 className="text-center font-montserrat font-semibold text-[#006B95] capitalize">
+                  {listOfOrders?.OC_Status}
+                </h1>
               ) : (
                 <div className="flex justify-center">
-                  {listOfOrders?.OC_Status === "paid" ? (
+                  {listOfOrders?.OC_Status === "paid" &&
+                    !listOfOrders.OC_RatingAndFeedback?.rating && (
+                      <button
+                        type="button"
+                        onClick={() => setModalRate(true)}
+                        className="w-fit px-9 py-2 bg-[#006B95] text-white font-montserrat rounded-md font-bold"
+                      >
+                        Rate
+                      </button>
+                    )}
+
+                  {listOfOrders?.OC_RatingAndFeedback?.rating && (
                     <Rate
                       value={listOfOrders?.OC_RatingAndFeedback?.rating}
                       disabled
                     />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setModalRate(true)}
-                      className="w-fit px-9 py-2 bg-[#006B95] text-white font-montserrat rounded-md font-bold"
-                    >
-                      Rate
-                    </button>
                   )}
                 </div>
               )}
@@ -163,7 +179,8 @@ export default function Details({ params }: DetailsProps) {
                 listOfOrders?.id || "",
                 listOfOrders?.OC_BuyerID || "",
                 listOfOrders?.OC_SellerID || "",
-                listOfOrders?.OC_Products?.OC_ProductName || ""
+                listOfOrders?.OC_Products?.OC_ProductName || "",
+                listOfOrders?.OC_Products?.OC_ProductID || ""
               );
               setModalRate(false);
             }}

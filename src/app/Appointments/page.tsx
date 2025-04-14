@@ -33,16 +33,33 @@ import { getMyPets } from "./mypet";
 
 interface Doctor {
   id?: string;
-  User_AvailableHours?: {
-    Days?: number[];
-  };
-  User_TypeOfAppointment?: string[];
   User_Email?: string;
   User_Name?: string;
   User_UID?: string;
   User_UserType?: string;
-  User_Location?: string;
   User_PNumber?: string;
+  User_TypeOfAppointment?: [string];
+  User_AvailableHours?: {
+    Days?: [number];
+  };
+  doctor_details?: string;
+  doctor_available_days?: [];
+  doctor_clinicAddress?: string;
+  doctor_clinicName?: string;
+  doctor_contact?: string;
+  doctor_email?: string;
+  doctor_experience?: string;
+  doctor_license_number?: string;
+  doctor_name?: string;
+  doctor_pet_types_treated?: [];
+  doctor_rating?: number;
+  doctor_specialty?: string;
+  doctor_standard_fee?: number;
+  doctor_sub_specialty?: string;
+  doctor_time_in?: string;
+  doctor_time_out?: string;
+  doctor_title?: string;
+  doctor_uid?: string;
 }
 
 interface MyPets {
@@ -124,50 +141,88 @@ export default function Doctors() {
     },
   ];
 
-  const appointments = [
+  const doctorServices = [
+    {
+      key: 0,
+      label: "Surgery",
+      value: "Surgery",
+    },
     {
       key: 1,
-      label: "Blood test",
+      label: "Dentistry",
+      value: "Dentistry",
     },
     {
       key: 2,
-      label: "Heartworm test",
+      label: "Dermatology",
+      value: "Dermatology",
     },
     {
       key: 3,
-      label: "Endoscopy",
+      label: "Behavior",
+      value: "Behavior",
     },
     {
       key: 4,
-      label: "Magnetic Resonance Imaging",
+      label: "Cardiology",
+      value: "Cardiology",
     },
+
     {
       key: 5,
-      label: "Urinalysis",
+      label: "Internal Medicine",
+      value: "Internal Medicine",
     },
+
     {
       key: 6,
-      label: "X-ray",
+      label: "Neurology",
+      value: "Neurology",
     },
     {
       key: 7,
-      label: "Biopsy",
+      label: "Oncology",
+      value: "Oncology",
     },
     {
       key: 8,
-      label: "Vetirinary Appointment",
+      label: "Ophthalmology",
+      value: "Ophthalmology",
     },
     {
       key: 9,
-      label: "Stool test",
+      label: "Theriogenology",
+      value: "Theriogenology",
     },
     {
       key: 10,
-      label: "Ultrasound",
+      label: "Exotic Companion Mammal Practice",
+      value: "Exotic Companion Mammal Practice",
     },
     {
       key: 11,
-      label: "Electrocardiography",
+      label: "Avian Medicine",
+      value: "Avian Medicine",
+    },
+    {
+      key: 12,
+      label: "Reptile/Amphibian Practice",
+      value: "Reptile/Amphibian Practice",
+    },
+    {
+      key: 13,
+      label: "Canine/Feline Practice",
+      value: "Canine/Feline Practice",
+    },
+    {
+      key: 14,
+      label: "Anesthesia",
+      value: "Anesthesia",
+    },
+    {
+      key: 15,
+      label: "General Practice",
+      value: "General Practice",
     },
   ];
 
@@ -213,7 +268,7 @@ export default function Doctors() {
       // Query the database for doctors available on the given day
       const doctorQuery = query(
         collection(db, "doctor"),
-        where("User_AvailableHours.Days", "array-contains", userWeek)
+        where("doctor_available_days", "array-contains", userWeek)
       );
 
       const querySnapshot = await getDocs(doctorQuery);
@@ -225,8 +280,10 @@ export default function Doctors() {
       }));
 
       // Filter the results manually to match the second condition
-      const filteredDoctors = availableDoctors.filter((doctor) =>
-        doctor.User_TypeOfAppointment?.includes(userAppointment)
+      const filteredDoctors = availableDoctors.filter(
+        (doctor) =>
+          doctor.doctor_specialty?.includes(userAppointment) ||
+          doctor.doctor_sub_specialty?.includes(userAppointment)
       );
 
       console.log("Available Doctors", filteredDoctors);
@@ -323,13 +380,13 @@ export default function Doctors() {
         Appointment_PatientFullName: fullName,
         Appointment_CreatedAt: Timestamp.now(),
         Appointment_PatientUserUID: patientUserUID,
-        Appointment_DoctorEmail: matchingDoctor?.User_Email,
-        Appointment_DoctorName: matchingDoctor?.User_Name,
+        Appointment_DoctorEmail: matchingDoctor?.doctor_email,
+        Appointment_DoctorName: matchingDoctor?.doctor_name,
         Appointment_TypeOfAppointment: userAppointment,
         Appointment_Date: appointmentDate,
-        Appointment_DoctorUID: matchingDoctor.User_UID,
-        Appointment_Location: matchingDoctor.User_Location,
-        Appointment_DoctorPNumber: matchingDoctor.User_PNumber,
+        Appointment_DoctorUID: matchingDoctor.doctor_uid,
+        Appointment_Location: matchingDoctor.doctor_clinicAddress,
+        Appointment_DoctorPNumber: matchingDoctor.doctor_email,
         Appointment_PatientPetAge: {
           Year: selectedPet ? selectedPet?.pet_age?.year : petYear,
           Month: selectedPet ? selectedPet.pet_age?.month : petMonth,
@@ -519,8 +576,8 @@ export default function Doctors() {
               <div className="absolute top-14 bg-white w-full rounded-md drop-shadow-xl">
                 {showAppointments ? (
                   <div className=" flex flex-col gap-2 py-2 px-4 rounded-md ">
-                    {appointments
-                      .slice(!seeMore ? 0 : 0, !seeMore ? 5 : 11)
+                    {doctorServices
+                      .slice(!seeMore ? 0 : 0, !seeMore ? 5 : 16)
                       .map((data) => {
                         return (
                           <div
@@ -613,44 +670,36 @@ export default function Doctors() {
                   >
                     <div className="h-40 w-40 rounded-full bg-white p-1 drop-shadow-xl  absolute -top-24 flex flex-col">
                       <div className="h-full w-full rounded-full bg-blue-500 text-center flex items-center p-1">
-                        Image of {data?.User_Name}
+                        Image of {data?.doctor_name}
                       </div>
                     </div>
                     <div className="flex flex-col mt-20 items-center">
                       <h1 className="font-hind font-bold text-3xl text-white">
-                        Dr. {data?.User_Name}
+                        Dr. {data?.doctor_name}
                       </h1>
                       <div className="flex flex-col gap-2 items-center px-4 mt-8 h-full">
                         <h1 className="text-center font-hind text-lg text-white font-medium row-span-3">
-                          {data?.User_Location}
+                          {data?.doctor_clinicAddress}
                         </h1>
                         <h1 className="text-center font-hind text-lg text-white font-medium">
-                          {data?.User_PNumber}
+                          {data?.doctor_contact}
                         </h1>
                         <h1 className="text-center font-hind text-lg text-white font-medium row-span-5">
                           Available Days: <br />
-                          <span className="grid grid-cols-3 items-start gap-1">
-                            {data?.User_AvailableHours?.Days?.length ? (
-                              data.User_AvailableHours.Days.map(
-                                (day, dayIndex) => {
-                                  const weekDay = weeks.find(
-                                    (week) => week.key === day
-                                  )?.label;
-                                  return (
-                                    <span key={dayIndex} className="">
-                                      {weekDay}
-                                    </span>
-                                  );
-                                }
-                              )
-                            ) : (
-                              <span>No available days</span>
+                          <span className="grid grid-cols-3 items-start">
+                            {data?.doctor_available_days?.map(
+                              (day, dayIndex) => {
+                                const weekDay = weeks.find(
+                                  (week) => week.key === day
+                                )?.label;
+                                return <span key={dayIndex}>{weekDay}</span>;
+                              }
                             )}
                           </span>
                         </h1>
-                        <h1 className="text-center font-hind text-lg text-white font-medium row-span-5 grid grid-cols-2 gap-2 mt-4">
-                          <span className="col-span-2">Appointment Type:</span>
-                          {data?.User_TypeOfAppointment?.map((data, index) => {
+                        <div className="text-center font-hind text-lg items-center text-white font-medium row-span-5 grid grid-cols-2 gap-2 mt-4">
+                          <h1 className="">Specialty:</h1>
+                          {/* {data?.User_TypeOfAppointment?.map((data, index) => {
                             return (
                               <span
                                 key={index}
@@ -659,8 +708,11 @@ export default function Doctors() {
                                 {data}
                               </span>
                             );
-                          })}
-                        </h1>
+                          })} */}
+                          <h1 className="">Sub Specialty:</h1>
+                          <p className="">{data?.doctor_specialty}</p>
+                          <p className="">{data?.doctor_sub_specialty}</p>
+                        </div>
                       </div>
                       <button
                         type="button"
@@ -696,7 +748,9 @@ export default function Doctors() {
               >
                 <p className="font-montserrat font-bold text-[#393939]">
                   Do you wish to have an appointment with{" "}
-                  {selectedDoctor?.User_Name}
+                  <span className="capitalize">
+                    {selectedDoctor?.doctor_name}
+                  </span>
                 </p>
                 <div className="grid grid-cols-3 items-center w-fit my-5 gap-4">
                   {myPets.length > 0 ? (

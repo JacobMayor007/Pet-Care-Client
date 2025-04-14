@@ -28,7 +28,7 @@ interface AppointmentID {
 }
 
 interface Product {
-  id: string;
+  id?: string;
   Seller_PaymentMethod?: string;
   Seller_TotalPrice?: string;
   Seller_ProductName?: string;
@@ -39,6 +39,21 @@ interface Product {
   Seller_UserFullName?: string;
   Seller_TypeOfProduct?: string;
   Seller_StockQuantity?: string;
+  Seller_TotalRating?: number;
+}
+
+interface Orders {
+  id?: string;
+  OC_BuyerFullName?: string;
+  OC_BuyerID?: string;
+  OC_BuyerEmail?: string;
+  OC_RatingAndFeedback?: {
+    feedback?: string;
+    rating?: number;
+  };
+  OC_Products?: {
+    OC_ProductID?: string;
+  };
 }
 
 const Product = ({ params }: AppointmentID) => {
@@ -48,6 +63,7 @@ const Product = ({ params }: AppointmentID) => {
   const [userEmail, setUserEmail] = useState<string | null>("");
   const [userData, setUserData] = useState<DocumentData[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
+  const [feedbackAndRating, setFeedbackAndRating] = useState<Orders[]>([]);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]); // Store similar products
   const [quantity, setQuantity] = useState(0);
   const [warning, setWarning] = useState(false);
@@ -55,6 +71,8 @@ const Product = ({ params }: AppointmentID) => {
   const auth = getAuth();
   const [addToCart, setAddToCart] = useState(false);
   const shippingFee = 100;
+
+  const descriptor = ["terrible", "bad", "normal", "good", "wonderful"];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -101,6 +119,27 @@ const Product = ({ params }: AppointmentID) => {
     fetchProductById();
   }, [id]);
   // Function to fetch product data by ID
+
+  useEffect(() => {
+    const getFeedbackAndRating = async () => {
+      try {
+        const docRef = collection(db, "Orders");
+        const q = query(docRef, where("OC_Products.OC_ProductID", "==", id));
+        const docSnap = await getDocs(q);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setFeedbackAndRating(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getFeedbackAndRating();
+  }, [id]);
 
   const fetchSimilarProducts = async (typeOfProduct: string) => {
     try {
@@ -224,9 +263,15 @@ const Product = ({ params }: AppointmentID) => {
     }
   }
 
+  console.log("Id: ", id);
+
+  console.log("FeedBack and Rating: ", feedbackAndRating);
+
   return (
     <div className="w-full pt-4 pb-8 px-8 ">
-      <ClientNavbar />
+      <div className="relative z-20">
+        <ClientNavbar />
+      </div>
       <Modal
         open={warning}
         onOk={() => setWarning(false)}
@@ -253,7 +298,7 @@ const Product = ({ params }: AppointmentID) => {
           </div>
           <div className=" h-[487px]">
             <div className="w-auto flex flex-col gap-4">
-              <Rate></Rate>
+              <Rate disabled value={product?.Seller_TotalRating} />
               <h1 className="text-5xl font-bold font-montserrat">
                 {product?.Seller_ProductName}
               </h1>
@@ -379,6 +424,42 @@ const Product = ({ params }: AppointmentID) => {
             );
           })}
         </div>
+      </div>
+      <div className="px-28 my-16">
+        <h1 className="font-montserrat font-bold text-2xl text-[#393939]">
+          Feedback and Ratings
+        </h1>
+        {feedbackAndRating.map((data, index) => {
+          return (
+            <div
+              key={index}
+              className="grid grid-cols-12 h-52 my-4 py-4 rounded-lg drop-shadow-md bg-white border-[1px] border-slate-300"
+            >
+              <div className="h-16 w-16 rounded-full border-2 border-[393939] mx-auto text-center place-content-center">
+                {data?.OC_BuyerFullName}
+              </div>
+              <div className="col-span-11 flex flex-col gap-2">
+                <p>{data?.OC_BuyerFullName}</p>
+                <p>
+                  Product:{" "}
+                  {
+                    descriptor[
+                      Math.max(0, (data?.OC_RatingAndFeedback?.rating ?? 0) - 1)
+                    ]
+                  }
+                </p>
+                <Rate
+                  disabled
+                  value={data?.OC_RatingAndFeedback?.rating}
+                  className="mb-4"
+                />
+                <h1 className="font-hind text-[#727272]">
+                  {data?.OC_RatingAndFeedback?.feedback}
+                </h1>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
