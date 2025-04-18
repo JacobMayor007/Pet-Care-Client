@@ -63,7 +63,7 @@ export default function SignUp() {
       // Add user data to Firestore
       const userRef = doc(db, "Users", res.user.uid);
       await setDoc(userRef, {
-        User_Name: fName + lName,
+        User_Name: fName + " " + lName,
         User_Email: email,
         User_UID: res.user.uid,
         TermsAndConditions: checkBox,
