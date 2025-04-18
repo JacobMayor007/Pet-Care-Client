@@ -53,6 +53,7 @@ interface Orders {
   };
   OC_Products?: {
     OC_ProductID?: string;
+    OC_ProductName?: string;
   };
 }
 
@@ -71,8 +72,6 @@ const Product = ({ params }: AppointmentID) => {
   const auth = getAuth();
   const [addToCart, setAddToCart] = useState(false);
   const shippingFee = 100;
-
-  const descriptor = ["terrible", "bad", "normal", "good", "wonderful"];
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -321,9 +320,7 @@ const Product = ({ params }: AppointmentID) => {
                   Stock:
                 </h1>
                 <p className="font-hind text-[#2F9400] text-lg font-normal">
-                  {Number(product?.Seller_StockQuantity) > 0
-                    ? `In Stock`
-                    : `No more stock`}
+                  {product?.Seller_StockQuantity}
                 </p>
               </div>
               <div className="flex flex-row gap-5 items-center">
@@ -430,32 +427,31 @@ const Product = ({ params }: AppointmentID) => {
           Feedback and Ratings
         </h1>
         {feedbackAndRating.map((data, index) => {
+          // Extract relevant data for cleaner code
+          const rating = data?.OC_RatingAndFeedback?.rating || 0;
+          const feedback = data?.OC_RatingAndFeedback?.feedback || "";
+          const buyerName = data?.OC_BuyerFullName || "Anonymous";
+
+          // Only render if we have valid rating and feedback
+          if (rating <= 0 || !feedback.trim()) return null;
+
           return (
             <div
-              key={index}
+              key={`feedback-${index}`}
               className="grid grid-cols-12 h-52 my-4 py-4 rounded-lg drop-shadow-md bg-white border-[1px] border-slate-300"
             >
               <div className="h-16 w-16 rounded-full border-2 border-[393939] mx-auto text-center place-content-center">
-                {data?.OC_BuyerFullName}
+                {buyerName.charAt(0).toUpperCase()}{" "}
+                {/* Show just the first letter */}
               </div>
+
               <div className="col-span-11 flex flex-col gap-2">
-                <p>{data?.OC_BuyerFullName}</p>
-                <p>
-                  Product:{" "}
-                  {
-                    descriptor[
-                      Math.max(0, (data?.OC_RatingAndFeedback?.rating ?? 0) - 1)
-                    ]
-                  }
-                </p>
-                <Rate
-                  disabled
-                  value={data?.OC_RatingAndFeedback?.rating}
-                  className="mb-4"
-                />
-                <h1 className="font-hind text-[#727272]">
-                  {data?.OC_RatingAndFeedback?.feedback}
-                </h1>
+                <p className="font-semibold">{buyerName}</p>
+                <p>Product: {data?.OC_Products?.OC_ProductName}</p>
+
+                <Rate disabled value={rating} className="mb-4" />
+
+                <p className="font-hind text-[#727272]">{feedback}</p>
               </div>
             </div>
           );

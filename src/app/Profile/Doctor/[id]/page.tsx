@@ -188,84 +188,6 @@ function DoctorProfile(props: { id: string }) {
   const [confirmModal, setConfirmModal] = useState(false);
   const [selectedPet, setSelectedPet] = useState<MyPets | null>(null);
   const [doctorSkill, setDoctorSkill] = useState("");
-  // const appointment_type = [
-  //   {
-  //     key: 0,
-  //     value: "Surgery",
-  //     label: "Surgery",
-  //   },
-
-  //   {
-  //     key: 1,
-  //     value: "Dentistry",
-  //     label: "Dentistry",
-  //   },
-  //   {
-  //     key: 2,
-  //     value: "Dermatology",
-  //     label: "Dermatology",
-  //   },
-  //   {
-  //     key: 3,
-  //     value: "Anesthesia",
-  //     label: "Anesthesia",
-  //   },
-  //   {
-  //     key: 4,
-  //     value: "Behavior",
-  //     label: "Behavior",
-  //   },
-  //   {
-  //     key: 5,
-  //     value: "Cardiology",
-  //     label: "Cardiology",
-  //   },
-  //   {
-  //     key: 6,
-  //     value: "Internal Medicine",
-  //     label: "Internal Medicine",
-  //   },
-  //   {
-  //     key: 7,
-  //     value: "Neurology",
-  //     label: "Neurology",
-  //   },
-  //   {
-  //     key: 8,
-  //     value: "Oncology",
-  //     label: "Oncology",
-  //   },
-  //   {
-  //     key: 9,
-  //     value: "Ophthalmology",
-  //     label: "Ophthalmology",
-  //   },
-  //   {
-  //     key: 10,
-  //     value: "Theriogenology",
-  //     label: "Theriogenology",
-  //   },
-  //   {
-  //     key: 11,
-  //     value: "Exotic Companion Mammal Practice",
-  //     label: "Exotic Companion Mammal Practice",
-  //   },
-  //   {
-  //     key: 12,
-  //     value: "Avian Medicine",
-  //     label: "Avian Medicine",
-  //   },
-  //   {
-  //     key: 13,
-  //     value: "Reptile/Amphibian Practice",
-  //     label: "Reptile/Amphibian Practice",
-  //   },
-  //   {
-  //     key: 14,
-  //     value: "Canine/Feline Practice",
-  //     label: "Canine/Feline Practice",
-  //   },
-  // ];
 
   useEffect(() => {
     const closeShowAppointments = (e: MouseEvent) => {
@@ -382,7 +304,7 @@ function DoctorProfile(props: { id: string }) {
       );
       const querySnapshot = await getDocs(q);
 
-      const isNewPatient = querySnapshot.empty; // If no prior appointments, the patient is new
+      const isNewPatient = querySnapshot.empty;
 
       // Add the appointment to Firestore
       const addAppointments = await addDoc(docRef, {

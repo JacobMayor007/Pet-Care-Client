@@ -80,8 +80,6 @@ export default function Details({ params }: DetailsProps) {
     }
   };
 
-  console.log(star, feedback);
-
   return (
     <div>
       <nav className="relative z-20">

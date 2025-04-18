@@ -42,10 +42,6 @@ interface Room {
   Renter_UserEmail?: string;
 }
 
-// interface myReservation {
-//   BC_BoarderStatus?: string;
-// }
-
 interface RoomID {
   params: Promise<{ id: string }>;
 }
@@ -82,7 +78,6 @@ export default function Room({ params }: RoomID) {
   const [checkOutTime, setCheckOutTime] = useState<Dayjs | null>(null);
   const [guest, setGuest] = useState<number | null>(0);
   const [days, setDays] = useState<number | null>(0);
-  const [roomID, setRoomID] = useState<string | null>("");
   const [roomStatus, setRoomStatus] = useState("");
 
   const [typeOfPaymentArray, setTypeOfPaymentArray] = useState<string[] | null>(
@@ -90,6 +85,19 @@ export default function Room({ params }: RoomID) {
   );
   const [userUID, setUserUID] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    const getDays = () => {
+      const countedDays = calculateDays(
+        checkInDate ? dayjs(checkInDate) : null,
+        checkOutDate ? dayjs(checkOutDate) : null
+      );
+      setDays(countedDays);
+    };
+    getDays();
+  }, [checkInDate, checkOutDate]);
+
+  console.log(guest);
 
   useEffect(() => {
     console.log("userEmail:", userEmail);
@@ -152,66 +160,64 @@ export default function Room({ params }: RoomID) {
     return checkOut.diff(checkIn, "day");
   };
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedCheckInDate = localStorage.getItem("Check In Date");
-      const storedCheckOutDate = localStorage.getItem("Check Out Date");
-      const storedCheckInTime = localStorage.getItem("Check In Time");
-      const storedCheckOutTime = localStorage.getItem("Check Out Time");
-      const storedRoomID = localStorage.getItem("Room ID");
-      const storedDays = Number(localStorage.getItem("Days"));
-      const storedGuests = Number(localStorage.getItem("Guest"));
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const storedCheckInDate = localStorage.getItem("Check In Date");
+  //     const storedCheckOutDate = localStorage.getItem("Check Out Date");
+  //     const storedCheckInTime = localStorage.getItem("Check In Time");
+  //     const storedCheckOutTime = localStorage.getItem("Check Out Time");
+  //     const storedRoomID = localStorage.getItem("Room ID");
+  //     const storedDays = Number(localStorage.getItem("Days"));
+  //     const storedGuests = Number(localStorage.getItem("Guest"));
 
-      const parsedCheckInDate =
-        storedCheckInDate && storedCheckInDate !== "undefined"
-          ? dayjs(JSON.parse(storedCheckInDate))
-          : null;
+  //     const parsedCheckInDate =
+  //       storedCheckInDate && storedCheckInDate !== "undefined"
+  //         ? dayjs(JSON.parse(storedCheckInDate))
+  //         : null;
 
-      const parsedCheckOutDate =
-        storedCheckOutDate && storedCheckOutDate !== "undefined"
-          ? dayjs(JSON.parse(storedCheckOutDate))
-          : null;
-      const parsedCheckInTime =
-        storedCheckInTime && storedCheckInTime !== "undefined"
-          ? dayjs(JSON.parse(storedCheckInTime as string))
-          : null;
+  //     const parsedCheckOutDate =
+  //       storedCheckOutDate && storedCheckOutDate !== "undefined"
+  //         ? dayjs(JSON.parse(storedCheckOutDate))
+  //         : null;
+  //     const parsedCheckInTime =
+  //       storedCheckInTime && storedCheckInTime !== "undefined"
+  //         ? dayjs(JSON.parse(storedCheckInTime as string))
+  //         : null;
 
-      const parsedCheckOutTime =
-        storedCheckOutTime && storedCheckOutTime !== "undefined"
-          ? dayjs(JSON.parse(storedCheckOutTime as string))
-          : null;
+  //     const parsedCheckOutTime =
+  //       storedCheckOutTime && storedCheckOutTime !== "undefined"
+  //         ? dayjs(JSON.parse(storedCheckOutTime as string))
+  //         : null;
 
-      setRoomID(storedRoomID);
-      console.log("Room ID on local storage", storedRoomID);
-      setCheckInDate(parsedCheckInDate);
-      setCheckOutDate(parsedCheckOutDate);
-      setCheckInTime(parsedCheckInTime);
-      setCheckOutTime(parsedCheckOutTime);
-      setDays(storedDays);
-      setGuest(storedGuests);
-    }
-  }, []);
+  //     setRoomID(storedRoomID);
+  //     console.log("Room ID on local storage", storedRoomID);
+  //     setCheckInDate(parsedCheckInDate);
+  //     setCheckOutDate(parsedCheckOutDate);
+  //     setCheckInTime(parsedCheckInTime);
+  //     setCheckOutTime(parsedCheckOutTime);
+  //     setDays(storedDays);
+  //     setGuest(storedGuests);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("Check In Date", JSON.stringify(checkInDate));
-      localStorage.setItem("Check Out Date", JSON.stringify(checkOutDate));
-      localStorage.setItem("Check In Time", JSON.stringify(checkInTime));
-      localStorage.setItem("Check Out Time", JSON.stringify(checkOutTime));
-      localStorage.setItem("Room ID", roomID || "");
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     localStorage.setItem("Check In Date", JSON.stringify(checkInDate));
+  //     localStorage.setItem("Check Out Date", JSON.stringify(checkOutDate));
+  //     localStorage.setItem("Check In Time", JSON.stringify(checkInTime));
+  //     localStorage.setItem("Check Out Time", JSON.stringify(checkOutTime));
+  //     localStorage.setItem("Room ID", roomID || "");
 
-      // Make sure guests is a number before saving
-      localStorage.setItem("Guest", guest?.toString() || "");
+  //     // Make sure guests is a number before saving
+  //     localStorage.setItem("Guest", guest?.toString() || "");
 
-      // Calculate and store the number of days
-      const countedDays = calculateDays(
-        checkInDate ? dayjs(checkInDate) : null,
-        checkOutDate ? dayjs(checkOutDate) : null
-      );
+  //     // Calculate and store the number of days
 
-      localStorage.setItem("Days", countedDays.toString());
-    }
-  }, [checkInDate, checkOutDate, checkInTime, checkOutTime, guest, roomID]);
+  //     localStorage.setItem("Days", countedDays.toString());
+  //   }
+  // }, [checkInDate, checkOutDate, checkInTime, checkOutTime, guest, roomID]);
+
+  console.log("Days: ", days);
 
   const formatTime = (date: Dayjs | null): string => {
     if (!date) return "";

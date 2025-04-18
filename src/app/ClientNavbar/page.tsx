@@ -34,6 +34,8 @@ interface Notifications {
   appointment_ID?: string;
   order_ID?: string;
   room_ID?: string;
+  memorial_id?: string;
+  sitter_id?: string;
   message?: string;
   sender?: string;
   receiver?: string;
@@ -561,7 +563,11 @@ const UserNotification = () => {
                     ? `schedule/${data.appointment_ID}`
                     : data?.order_ID
                     ? `cart/${data.order_ID}`
-                    : `rooms/${data?.room_ID}`
+                    : data?.room_ID
+                    ? `rooms/${data?.room_ID}`
+                    : data?.memorial_id
+                    ? `memorial/${data?.memorial_id}`
+                    : `sitter/${data?.sitter_id}`
                 }`}
                 className="col-span-11 grid grid-cols-12"
               >
