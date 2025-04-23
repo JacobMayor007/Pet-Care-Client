@@ -108,6 +108,18 @@ interface Memorial {
   mortician_uid?: string;
 }
 
+interface Sitters {
+  id?: string;
+  sitter_contact?: string;
+  sitter_email?: string;
+  sitter_fullname?: string;
+  sitter_isExperience?: boolean;
+  sitter_type_of_payments?: [];
+  sitter_isOkayOnHoliday?: [];
+  sitter_uid?: string;
+  sitter_working_days?: [];
+}
+
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [userID, setUserID] = useState("");
@@ -119,6 +131,7 @@ export default function Home() {
   const [doctor, setDoctor] = useState<Doctor[]>([]);
   const [doctorID, setDoctorID] = useState("");
   const [memorial, setMemorial] = useState<Memorial[]>([]);
+  const [sitter, setSitter] = useState<Sitters[]>([]);
 
   useEffect(() => {
     const auth = getAuth();
@@ -253,6 +266,27 @@ export default function Home() {
     }
   }, [productID, roomID, doctorID]);
 
+  useEffect(() => {
+    const getSitters = async () => {
+      try {
+        const docRef = collection(db, "sitter");
+        const docSnap = await getDocs(docRef);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setSitter(result);
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
+    };
+
+    getSitters();
+  }, []);
+
   return (
     <div className={userID ? `block` : `hidden`}>
       <nav className="z-10 relative">
@@ -340,7 +374,7 @@ export default function Home() {
           {food.slice(0, 5).map((data) => {
             return (
               <Link
-                href={`/Product${data?.id}`}
+                href={`/Product/${data?.id}`}
                 key={data?.id}
                 className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-md cursor-pointer h-64 transform transition-all active:scale-95 ease-out duration-50 select-none"
               >
@@ -379,7 +413,7 @@ export default function Home() {
           {item.slice(0, 5).map((data) => {
             return (
               <Link
-                href="/Product"
+                href={`/Product/${data?.id}`}
                 key={data?.id}
                 className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-md cursor-pointer h-64 transform transition-all active:scale-95 ease-out duration-50 select-none"
               >
@@ -505,7 +539,7 @@ export default function Home() {
             Memorial Providers
           </h1>
           <Link
-            href="/Appointments"
+            href="/pc/memorial"
             className="text-sm font-montserrat font-bold italic text-[#4ABEC5] flex flex-col gap-1"
           >
             View List Of Memorial Providers
@@ -568,6 +602,72 @@ export default function Home() {
                   className="bg-white text-[#006B95] font-bold font-montserrat mb-5 w-fit px-6 py-3 text-lg rounded-lg active:scale-95"
                 >
                   View Memorial Provider
+                </Link>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className=" px-32 mb-16 mt-28 py-4">
+        <div className=" flex flex-row justify-between items-center">
+          <h1 className="font-montserrat text-3xl text-[#393939] font-bold my-4">
+            Pet Sitter Providers
+          </h1>
+          <Link
+            href="/pc/sitter"
+            className="text-sm font-montserrat font-bold italic text-[#4ABEC5] flex flex-col gap-1"
+          >
+            View List Of Pet Sitters
+            <span className="w-full h-1 rounded-full bg-[#4ABEC5]" />
+          </Link>
+        </div>
+        <div className="w-full grid grid-cols-3 gap-6 mt-24 justify-between">
+          {sitter.map((data, index) => {
+            return (
+              <div
+                key={index}
+                className=" h-[480px] bg-[#006B95] flex flex-col justify-between rounded-xl items-center drop-shadow-md border-[1px] relative border-slate-300 "
+              >
+                <div className="h-40  w-40 rounded-full border-[1px] border-slate-300 absolute left-32 -top-20 bg-white flex items-center justify-center">
+                  <h1 className="font-montserrat font-bold text-lg capitalize">
+                    {data?.sitter_fullname?.charAt(0)}
+                  </h1>
+                </div>
+                <div className="mt-32 flex flex-col gap-4 text-white font-montserrat px-6">
+                  <h1 className="text-center font-montserrat font-bold text-white text-xl capitalize">
+                    {data?.sitter_fullname}
+                  </h1>
+                  <h1 className="text-center">+63 {data?.sitter_contact}</h1>
+
+                  <div className="grid grid-cols-3 text-center">
+                    {data?.sitter_type_of_payments?.map((data, index) => {
+                      return (
+                        <h1
+                          key={index}
+                          className="font-montserrat font-bold text-white capitalize "
+                        >
+                          {data}
+                        </h1>
+                      );
+                    })}
+                  </div>
+                  {data?.sitter_isExperience && (
+                    <h1 className="text-center font-montserrat font-semibold underline">
+                      Have Experience
+                    </h1>
+                  )}
+                  {data?.sitter_isOkayOnHoliday && (
+                    <h1 className="text-center font-montserrat font-semibold text-2xl underline">
+                      Can Work On Holidays
+                    </h1>
+                  )}
+                </div>
+
+                <Link
+                  href={`/Profile/Sitter/${data?.id}`}
+                  className="bg-white text-[#006B95] font-bold font-montserrat mb-5 w-fit px-6 py-3 text-lg rounded-lg active:scale-95"
+                >
+                  View Sitter Provider
                 </Link>
               </div>
             );

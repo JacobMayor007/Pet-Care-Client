@@ -644,6 +644,10 @@ export default function UserProfile() {
             <FontAwesomeIcon icon={faPlus} />
           </span>
         </Link>
+        <h1 className="text-[#393939] text-2xl font-montserrat font-bold mt-8">
+          Latest Offers
+        </h1>
+        <div></div>
       </div>
     </div>
   );

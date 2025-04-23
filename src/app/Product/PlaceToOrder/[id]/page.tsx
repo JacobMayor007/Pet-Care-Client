@@ -210,7 +210,9 @@ export default function PlaceToOrder({ params }: ProductID) {
 
   return (
     <div>
-      <ClientNavbar />
+      <nav className="relative z-20">
+        <ClientNavbar />
+      </nav>
       <div className="px-36 py-8 ">
         <h1 className="font-montserrat text-3xl font-bold">Place To Order</h1>
         <div className="grid grid-cols-5 gap-2 mt-10 mx-8 bg-white drop-shadow-lg pl-5 py-10 rounded-xl">

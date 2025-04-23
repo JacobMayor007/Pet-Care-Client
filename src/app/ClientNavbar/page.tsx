@@ -5,7 +5,16 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Signout from "../SignOut/page";
 import { useRouter } from "next/navigation";
-import { faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBowlFood,
+  faDove,
+  faEyeSlash,
+  faHome,
+  faHotel,
+  faMessage,
+  faShoppingCart,
+  faStethoscope,
+} from "@fortawesome/free-solid-svg-icons";
 import * as Notifications from "../fetchData/fetchNotifications";
 import {
   UserOutlined,
@@ -221,49 +230,93 @@ export default function ClientNavbar() {
             Pet Care
           </h1>
         </div>
-        <ul className="list-type-none flex items-center gap-3">
-          <li className="w-28 h-14 flex items-center justify-center">
+        <ul className="list-type-none grid grid-cols-7 items-center gap-3">
+          <li className="relative w-16 h-14 flex items-center justify-center group">
             <Link
               href="/"
-              className="font-montserrat text-base text-[#006B95] font-bold"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
             >
-              Dashboard
-            </Link>
-          </li>
-          <li className="w-28 h-14 flex items-center justify-center">
-            <Link
-              href="/Booking"
-              className="font-montserrat text-base text-[#006B95] font-bold"
-            >
-              Booking
-            </Link>
-          </li>
-          <li className="w-28 h-14 flex items-center justify-center ">
-            <Link
-              href="/Shopping"
-              className="font-montserrat text-base text-[#006B95] font-bold"
-            >
-              Shopping
-            </Link>
-          </li>
-          <li className="w-28 h-14 flex items-center justify-center">
-            <Link
-              className="font-montserrat text-base text-[#006B95] font-bold"
-              href="/Appointments"
-            >
-              Appointments
+              <FontAwesomeIcon icon={faHome} className="text-xl" />
+
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-2 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Dashboard
+              </span>
             </Link>
           </li>
 
-          <li className="w-28 h-14 flex items-center justify-center">
+          <li className="relative h-14 flex items-center justify-center group">
+            <Link
+              href="/Booking"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
+            >
+              <FontAwesomeIcon icon={faHotel} className="text-xl" />
+
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Booking
+              </span>
+            </Link>
+          </li>
+          <li className="relative h-14 flex items-center justify-center group">
+            <Link
+              href="/Shopping"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
+            >
+              <FontAwesomeIcon icon={faShoppingCart} className="text-xl" />
+
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Shopping
+              </span>
+            </Link>
+          </li>
+          <li className="relative h-14 flex items-center justify-center group">
+            <Link
+              href="/Appointments"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
+            >
+              <FontAwesomeIcon icon={faStethoscope} className="text-xl" />
+
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Appointments
+              </span>
+            </Link>
+          </li>
+
+          <li className="relative h-14 flex items-center justify-center group">
             <div
-              className="font-montserrat text-base text-[#006B95] font-bold cursor-pointer"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center cursor-pointer"
               onClick={() => {
                 latestChats();
               }}
             >
-              Inbox
+              <FontAwesomeIcon icon={faMessage} />
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Inbox
+              </span>
             </div>
+          </li>
+          <li className="relative h-14 flex items-center justify-center group">
+            <Link
+              href="/pc/memorial"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
+            >
+              <FontAwesomeIcon icon={faDove} className="text-xl" />
+
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Memorial
+              </span>
+            </Link>
+          </li>
+          <li className="relative h-14 flex items-center justify-center group">
+            <Link
+              href="/pc/sitter"
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
+            >
+              <FontAwesomeIcon icon={faBowlFood} className="text-xl" />
+
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium py-1 rounded shadow-md opacity-0 translate-y-2 text-nowrap px-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Pet Sitter
+              </span>
+            </Link>
           </li>
         </ul>
         <div className="flex items-center gap-4" ref={btnRef}>
@@ -323,7 +376,7 @@ export default function ClientNavbar() {
             <div
               className={
                 logout
-                  ? `grid grid-rows-6 justify-center items-center bg-[#F3F3F3] drop-shadow-xl rounded-lg absolute top-10 -left-3 cursor-pointer h-fit w-56`
+                  ? `grid grid-rows-9 justify-center items-center bg-[#F3F3F3] drop-shadow-xl rounded-lg absolute top-10 -left-3 cursor-pointer h-fit w-56`
                   : `hidden`
               }
             >
@@ -340,22 +393,34 @@ export default function ClientNavbar() {
                 Find match to breed?
               </h1>
               <Link
-                href={`/Doctor`}
+                href={`https://doctor-pet-care-pro.vercel.app/`}
                 className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
               >
                 Want to become part of our doctors?
               </Link>
               <Link
-                href={`/Provider`}
+                href={`https://seller-pet-care-pro.vercel.app/`}
                 className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
               >
                 Want to become part of our product sellers?
               </Link>
               <Link
-                href={`/Renter`}
+                href={`https://boarding-pet-care-pro.vercel.app`}
                 className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
               >
                 Want to become part of our renters?
+              </Link>
+              <Link
+                href={`https://memorial-pet-care-pro.vercel.app`}
+                className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
+              >
+                Want to become part of our memorials?
+              </Link>
+              <Link
+                href={`https://sitter-pet-care-pro.vercel.app`}
+                className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
+              >
+                Want to become part of our pet sitter?
               </Link>
               <Link
                 href={`/Settings`}

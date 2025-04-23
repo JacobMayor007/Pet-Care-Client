@@ -110,12 +110,7 @@ export default function Booking() {
                       ? data.Renter_RoomDescription.split(".")[0] + "."
                       : ""}
                   </p>
-                  <Link
-                    href={`/Booking/${data?.id}`}
-                    className="text-white italic underline font-montserrat text-base"
-                  >
-                    View Room Details
-                  </Link>
+
                   <div className="border-b-2 border-gray-300 mb-4" />
                   <div className="grid grid-cols-7">
                     <div className="col-span-2">
@@ -148,7 +143,7 @@ export default function Booking() {
                       })}
                     </div>
                     <div className="col-span-5 flex justify-end">
-                      <div>
+                      <div className="h-fit flex flex-col">
                         <h1 className="font-montserrat text-white font-bold text-2xl">
                           Php {data?.Renter_RoomPrice}
                         </h1>
@@ -158,27 +153,21 @@ export default function Booking() {
                         <p className="font-montserrat text-white text-base">
                           Excluding taxes, and fees
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => setBookNow(true)}
-                          className={`w-full h-10 font-montserrat text-base rounded-3xl uppercase mt-5 ${
+
+                        <Link
+                          href={`/Booking/${data?.id}`}
+                          className={`w-full h-10 flex flex-col justify-center items-center font-montserrat text-base rounded-3xl uppercase mt-5 ${
                             data?.Renter_RoomStatus === "occupied" ||
                             data?.Renter_RoomStatus === "reserved"
                               ? `bg-slate-100 text-black font-bold`
                               : `bg-[#77D8DD]  text-white font-bold`
                           }`}
-                          disabled={
-                            data?.Renter_RoomStatus === "occupied" ||
-                            data?.Renter_RoomStatus === "reserved"
-                              ? true
-                              : false
-                          }
                         >
                           {data?.Renter_RoomStatus === "occupied" ||
                           data?.Renter_RoomStatus === "reserved"
                             ? data?.Renter_RoomStatus
                             : `Book Now`}
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>

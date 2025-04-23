@@ -9,7 +9,7 @@ import {
   faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { DatePicker, Modal } from "antd";
+import { DatePicker, Modal, Rate } from "antd";
 import "@ant-design/v5-patch-for-react-19";
 import dayjs, { Dayjs } from "dayjs";
 import {
@@ -29,6 +29,15 @@ interface MemorialId {
   params: Promise<{ id: string }>;
 }
 
+interface Mourners {
+  id?: string;
+  memorial_service_rate_and_feedback?: {
+    feedback?: string;
+    rate?: number;
+  };
+  memorial_service_mourner_name?: string;
+}
+
 interface Memorial {
   id?: string;
   morticial_memorial_services?: [];
@@ -45,6 +54,7 @@ interface Memorial {
 export default function ViewMemorial({ params }: MemorialId) {
   const dropDownRef = useRef<HTMLDivElement | null>(null);
   const dropDownPaymentRef = useRef<HTMLDivElement | null>(null);
+  const [feedbackRate, setFeedbackRate] = useState<Mourners[]>([]);
   const { id } = React.use(params);
   const [dateModal, setDateModal] = useState(false);
   const [userEmail, setUserEmail] = useState("");
@@ -118,6 +128,31 @@ export default function ViewMemorial({ params }: MemorialId) {
     };
 
     getThisMemorialProvider();
+  }, [id]);
+
+  useEffect(() => {
+    const getFeedbackAndRate = async () => {
+      try {
+        const docRef = collection(db, "mourners");
+        const q = query(
+          docRef,
+          where("memorial_service_provider_id", "==", id),
+          where("memorial_service_status", "==", "Paid"),
+          where("memorial_service_rate_and_feedback.rate", "!=", null)
+        );
+        const docSnap = await getDocs(q);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setFeedbackRate(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getFeedbackAndRate();
   }, [id]);
 
   useEffect(() => {
@@ -247,6 +282,8 @@ export default function ViewMemorial({ params }: MemorialId) {
     );
   }
 
+  console.log(feedbackRate);
+
   return (
     <div>
       <nav className="relative z-20">
@@ -329,6 +366,44 @@ export default function ViewMemorial({ params }: MemorialId) {
             </span>
           </h1>
         </div>
+      </div>
+      <h1 className="font-montserrat font-bold text-2xl mx-56 mb-8">
+        Feedback and Rate
+      </h1>
+      <div className="mx-56 flex flex-col mb-8 gap-5">
+        {feedbackRate?.map((data, index) => {
+          return (
+            <div
+              className="bg-white rounded-lg p-4 drop-shadow-md border-slate-300 border-[1px] h-48 grid grid-cols-12"
+              key={index}
+            >
+              <div className="h-12 w-12 rounded-full border-slate-300 flex items-center justify-center capitalize font-montserrat font-bold text-2xl border-[1px]  mx-auto">
+                {data?.memorial_service_mourner_name?.charAt(0)}
+              </div>
+              <div className="col-span-11 flex flex-col ">
+                <h1>
+                  Name:{" "}
+                  <span className="font-montserrat font-bold text-lg text-[#006B95] capitalize">
+                    {data?.memorial_service_mourner_name}
+                  </span>
+                </h1>
+                <h1 className="font-hind text-[#393939] text-lg">
+                  Rate:{" "}
+                  <span>
+                    <Rate
+                      value={data?.memorial_service_rate_and_feedback?.rate}
+                      disabled
+                    />
+                  </span>
+                </h1>
+                <div className="h-0.5 w-full bg-slate-300 rounded-full" />
+                <div className="mt-2 font-hind text-[#393939] text-base">
+                  {data?.memorial_service_rate_and_feedback?.feedback}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
       <Modal
         open={dateModal}
