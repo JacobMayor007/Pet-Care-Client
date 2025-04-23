@@ -8,7 +8,7 @@ import {
   faCircleCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { DatePicker, Modal } from "antd";
+import { DatePicker, Modal, Rate } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import {
   addDoc,
@@ -42,6 +42,15 @@ interface SitterID {
   params: Promise<{ id: string }>;
 }
 
+interface FeedbackAndRate {
+  id?: string;
+  sitting_service_feedback_and_rate?: {
+    rate?: number;
+    feedback?: string;
+  };
+  sitting_service_requester_name?: string;
+}
+
 export default function Sitter({ params }: SitterID) {
   const { id } = React.use(params);
   const dropDownPaymentRef = useRef<HTMLDivElement | null>(null);
@@ -54,6 +63,8 @@ export default function Sitter({ params }: SitterID) {
   const [successful, setSuccessful] = useState(false);
   const [dropdownServices, setDropdownServices] = useState(false);
   const [dropdownPayments, setDropdownPayments] = useState(false);
+  const [feedbackRate, setFeedbackRate] = useState<FeedbackAndRate[]>([]);
+
   const [petSitOffer, setPetSitOffer] = useState({
     price: 0,
     address: "",
@@ -265,6 +276,26 @@ export default function Sitter({ params }: SitterID) {
     }
   };
 
+  useEffect(() => {
+    const getFeedbackAndRate = async () => {
+      try {
+        const docRef = collection(db, "requester");
+        const q = query(docRef, where("sitting_service_provider_id", "==", id));
+        const docSnap = await getDocs(q);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setFeedbackRate(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getFeedbackAndRate();
+  }, [id]);
+
   if (successful) {
     setInterval(() => {
       setSuccessful(false);
@@ -284,6 +315,8 @@ export default function Sitter({ params }: SitterID) {
       </div>
     );
   }
+
+  console.log(feedbackRate);
 
   return (
     <div>
@@ -352,6 +385,45 @@ export default function Sitter({ params }: SitterID) {
             Can work even on holidays
           </h1>
         )}
+      </div>
+
+      <h1 className="font-montserrat font-bold text-2xl mx-56 mt-10 mb-8">
+        Feedback and Rate
+      </h1>
+      <div className="mx-56 flex flex-col mb-8 gap-5">
+        {feedbackRate?.map((data, index) => {
+          return (
+            <div
+              className="bg-white rounded-lg p-4 drop-shadow-md border-slate-300 border-[1px] h-48 grid grid-cols-12"
+              key={index}
+            >
+              <div className="h-12 w-12 rounded-full border-slate-300 flex items-center justify-center capitalize font-montserrat font-bold text-2xl border-[1px]  mx-auto">
+                {data?.sitting_service_requester_name?.charAt(0)}
+              </div>
+              <div className="col-span-11 flex flex-col ">
+                <h1>
+                  Name:{" "}
+                  <span className="font-montserrat font-bold text-lg text-[#006B95] capitalize">
+                    {data?.sitting_service_requester_name}
+                  </span>
+                </h1>
+                <h1 className="font-hind text-[#393939] text-lg">
+                  Rate:{" "}
+                  <span>
+                    <Rate
+                      value={data?.sitting_service_feedback_and_rate?.rate}
+                      disabled
+                    />
+                  </span>
+                </h1>
+                <div className="h-0.5 w-full bg-slate-300 rounded-full" />
+                <div className="mt-2 font-hind text-[#393939] text-base">
+                  {data?.sitting_service_feedback_and_rate?.feedback}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <Modal
