@@ -16,12 +16,7 @@ import {
   faStethoscope,
 } from "@fortawesome/free-solid-svg-icons";
 import * as Notifications from "../fetchData/fetchNotifications";
-import {
-  UserOutlined,
-  SearchOutlined,
-  ShoppingCartOutlined,
-  BellOutlined,
-} from "@ant-design/icons";
+import { UserOutlined, SearchOutlined, BellOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import fetchUserData from "../fetchData/fetchUserData";
 import { Modal } from "antd";
@@ -89,7 +84,6 @@ export default function ClientNavbar() {
   const auth = getAuth();
   const router = useRouter();
   const [showNotif, setShowNotif] = useState(false);
-  const [dropDown, setDropDown] = useState(false);
   const [unopenNotif, setUnopenNotif] = useState(0);
   const [userUID, setUserUID] = useState("");
   const [toMatchModal, setToMatchModal] = useState(false);
@@ -120,7 +114,6 @@ export default function ClientNavbar() {
     const closeNotification = (e: MouseEvent) => {
       if (!btnRef.current?.contains(e.target as Node)) {
         setShowNotif(false);
-        setDropDown(false);
         setLogout(false);
       }
     };
@@ -337,42 +330,8 @@ export default function ClientNavbar() {
               onClick={() => {
                 setLogout((prev) => !prev);
                 setShowNotif(false);
-                setDropDown(false);
               }}
             />
-            <ShoppingCartOutlined
-              className="text-[#006B95] font-bold text-lg cursor-pointer"
-              onClick={() => {
-                setDropDown((prev) => !prev);
-                setLogout(false);
-                setShowNotif(false);
-              }}
-            />
-
-            {dropDown ? (
-              <nav className="absolute top-4 flex flex-col left-10 gap-2 bg-white drop-shadow-md p-4 rounded-md">
-                <Link
-                  href="/pc/cart"
-                  className="font-montserrat font-bold text-[#006B95] text-sm"
-                >
-                  Cart
-                </Link>
-                <Link
-                  href="/pc/room"
-                  className="font-montserrat font-bold text-[#006B95] text-sm"
-                >
-                  Rooms
-                </Link>
-                <Link
-                  href="/pc/schedule"
-                  className="font-montserrat font-bold text-[#006B95] text-sm"
-                >
-                  Schedule
-                </Link>
-              </nav>
-            ) : (
-              <div className="hidden" />
-            )}
             <div
               className={
                 logout
