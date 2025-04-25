@@ -341,7 +341,7 @@ export default function Room({ params }: RoomID) {
 
       const notifRef = collection(db, "notifications");
       addDoc(notifRef, {
-        boardID: addRef.id,
+        room_ID: addRef.id,
         createdAt: Timestamp.now(),
         receiverID: room?.Renter_UserID,
         hide: false,

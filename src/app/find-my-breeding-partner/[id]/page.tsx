@@ -6,11 +6,7 @@ import {
   faHeart,
 } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
-import {
-  BellOutlined,
-  ShoppingCartOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { BellOutlined, UserOutlined } from "@ant-design/icons";
 
 import * as Notifications from "@/app/fetchData/fetchNotifications";
 import { useEffect, useRef, useState } from "react";
@@ -127,7 +123,6 @@ export default function FoundMyBuddy({ params }: petId) {
   const [logout, setLogout] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userUID, setUserUID] = useState("");
-  const [dropDown, setDropDown] = useState(false);
   const [isHeart, setIsHeart] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(3);
   const [isReject, setIsReject] = useState(false);
@@ -208,7 +203,6 @@ export default function FoundMyBuddy({ params }: petId) {
       if (userRef.current && !userRef.current.contains(e.target as Node)) {
         setLogout(false);
         setShowNotif(false);
-        setDropDown(false);
       }
     };
 
@@ -276,7 +270,6 @@ export default function FoundMyBuddy({ params }: petId) {
         console.log("Excluded: ", excludedPetIds);
 
         let filteredPets = [];
-        // let myFilterPets = [];
 
         const petsQuery = collection(db, "pet-to-match");
         const petsSnapshot = await getDocs(petsQuery);
@@ -308,6 +301,8 @@ export default function FoundMyBuddy({ params }: petId) {
     getPetsToMatch();
   }, [userUID, id, currentPet]);
 
+  console.log(currentPet);
+
   const myHeartedPets = async (likedPetId: string) => {
     try {
       setLoading(true);
@@ -318,11 +313,37 @@ export default function FoundMyBuddy({ params }: petId) {
     } catch (error) {
       console.error(error);
     } finally {
+      window.location.reload();
+    }
+  };
+
+  const rejectedPetsHandle = async (rejectedPetID: string) => {
+    console.log(rejectedPetID);
+
+    try {
+      setLoading(true);
+      const data = petToMatch.length;
+      const randomizedData = Math.floor(Math.random() * data);
+      setCurrentIndex(randomizedData);
+      const docRef = collection(db, "rejects");
+
+      const result = await addDoc(docRef, {
+        userUID: userUID,
+        petId: id,
+        userEmail: userEmail,
+        rejectedPetId: rejectedPetID,
+      });
+
+      console.log(result);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setInterval(() => {
         setLoading(false);
       }, 2000);
       setInterval(() => {
         setIsHeart(false);
+        window.location.reload();
       }, 2000);
     }
   };
@@ -416,47 +437,14 @@ export default function FoundMyBuddy({ params }: petId) {
             onClick={() => {
               setShowNotif((prev) => !prev);
               setLogout(false);
-              setDropDown(false);
               Notifications.openNotification(userUID || "");
             }}
           />
-          <ShoppingCartOutlined
-            className="text-[#B32134] font-bold text-lg cursor-pointer"
-            onClick={() => {
-              setDropDown((prev) => !prev);
-              setLogout(false);
-              setShowNotif(false);
-            }}
-          />
-          {dropDown ? (
-            <nav className="absolute top-5 right-10 grid grid-rows-3 items-center text-center gap-2 bg-white drop-shadow-md p-4 rounded-md w-60 h-48">
-              <Link
-                href="/pc/cart"
-                className="font-montserrat font-bold text-[#006B95] text-lg border-b-[1px] border-[#B1B1B1] h-full flex justify-center items-center"
-              >
-                Cart
-              </Link>
-              <a
-                href="/pc/room"
-                className="font-montserrat font-bold text-[#006B95] text-lg border-b-[1px] border-[#B1B1B1] h-full flex justify-center items-center"
-              >
-                Rooms
-              </a>
-              <Link
-                href="/pc/schedule"
-                className="font-montserrat font-bold text-[#006B95] text-lg h-full flex justify-center items-center"
-              >
-                Schedule
-              </Link>
-            </nav>
-          ) : (
-            <div className="hidden" />
-          )}
+
           <UserOutlined
             className="text-[#B32134] text-lg cursor-pointer"
             onClick={() => {
               setLogout((prev) => !prev);
-              setDropDown(false);
               setShowNotif(false);
             }}
           />
@@ -564,9 +552,9 @@ export default function FoundMyBuddy({ params }: petId) {
       </nav>
 
       <Modal
-        open={registerModal}
-        onCancel={() => window.history.back()}
-        onClose={() => window.history.back()}
+        open={currentPet?.length > 0 ? false : true}
+        onCancel={() => history.back()}
+        onClose={() => history.back()}
         onOk={() => {
           registerHandle();
         }}
@@ -671,6 +659,7 @@ export default function FoundMyBuddy({ params }: petId) {
               } h-11 w-11 rounded-full flex items-center justify-center cursor-pointer mb-6`}
               onClick={() => {
                 setIsReject((prev) => !prev);
+                rejectedPetsHandle(petToMatch[currentIndex]?.pet_UID || "");
               }}
             >
               <FontAwesomeIcon

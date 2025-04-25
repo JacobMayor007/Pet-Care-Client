@@ -387,6 +387,7 @@ export default function Doctors() {
         Appointment_DoctorUID: matchingDoctor.doctor_uid,
         Appointment_Location: matchingDoctor.doctor_clinicAddress,
         Appointment_DoctorPNumber: matchingDoctor.doctor_email,
+        Appointment_Price: matchingDoctor?.doctor_standard_fee,
         Appointment_PatientPetAge: {
           Year: selectedPet ? selectedPet?.pet_age?.year : petYear,
           Month: selectedPet ? selectedPet.pet_age?.month : petMonth,

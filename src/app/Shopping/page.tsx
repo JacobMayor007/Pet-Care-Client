@@ -101,7 +101,7 @@ export default function Shop() {
 
   return (
     <div className={userID ? `block` : `hidden`}>
-      <div className="z-50">
+      <div className="z-20 relative">
         <ClientNavbar />
       </div>
 
