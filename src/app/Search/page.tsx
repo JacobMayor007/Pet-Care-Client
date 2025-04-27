@@ -76,6 +76,7 @@ interface Memorial {
   mortician_memorial_name?: string;
   mortician_memorial_payments?: [];
   mortician_uid?: string;
+  mortician_total_rating?: number;
 }
 
 interface Sitters {
@@ -86,6 +87,7 @@ interface Sitters {
   sitter_isExperience?: boolean;
   sitter_type_of_payments?: [];
   sitter_isOkayOnHoliday?: [];
+  sitter_total_rating?: number;
   sitter_uid?: string;
   sitter_working_days?: [];
 }
@@ -789,6 +791,7 @@ export default function Search() {
                             {data?.sitter_fullname}
                           </h1>
                           <h1>{data?.sitter_email}</h1>
+                          <Rate value={data?.sitter_total_rating} disabled />
                         </div>
                         <div>{data?.sitter_contact}</div>
                         <div>
@@ -834,6 +837,7 @@ export default function Search() {
                           <h1 className="text-[#006B95] font-medium">
                             {data?.mortician_email}
                           </h1>
+                          <Rate value={data?.mortician_total_rating} disabled />
                         </div>
                         <div>
                           <h1 className="text-[#393939] font-medium">
