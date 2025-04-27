@@ -8,7 +8,7 @@ import { db } from "@/app/firebase/config";
 import { format } from "date-fns";
 import dayjs, { Dayjs } from "dayjs";
 import Image from "next/image";
-import { DatePicker, TimePicker } from "antd";
+import { DatePicker, Rate, TimePicker } from "antd";
 import {
   doc,
   DocumentData,
@@ -40,6 +40,7 @@ interface Room {
   Renter_UserFullName?: string;
   Renter_UserID?: string;
   Renter_UserEmail?: string;
+  Renter_Room_Total_Rating?: number;
 }
 
 interface RoomID {
@@ -56,6 +57,20 @@ interface Option {
   value: string;
   label: string;
   name: string;
+}
+
+interface RatedAndFeedback {
+  id?: string;
+  BC_BoarderFullName?: string;
+  BC_BoarderRateFeedback?: {
+    feedback: string;
+    rate?: number;
+  };
+}
+
+interface Rated {
+  id?: string;
+  Renter_Room_Total_Rating?: number;
 }
 
 export default function Room({ params }: RoomID) {
@@ -79,7 +94,9 @@ export default function Room({ params }: RoomID) {
   const [guest, setGuest] = useState<number | null>(0);
   const [days, setDays] = useState<number | null>(0);
   const [roomStatus, setRoomStatus] = useState("");
+  const [roomRate, setRoomRate] = useState<Rated | null>(null);
 
+  const [ratedFeedback, setRatedFeedback] = useState<RatedAndFeedback[]>([]);
   const [typeOfPaymentArray, setTypeOfPaymentArray] = useState<string[] | null>(
     null
   );
@@ -160,65 +177,6 @@ export default function Room({ params }: RoomID) {
     return checkOut.diff(checkIn, "day");
   };
 
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const storedCheckInDate = localStorage.getItem("Check In Date");
-  //     const storedCheckOutDate = localStorage.getItem("Check Out Date");
-  //     const storedCheckInTime = localStorage.getItem("Check In Time");
-  //     const storedCheckOutTime = localStorage.getItem("Check Out Time");
-  //     const storedRoomID = localStorage.getItem("Room ID");
-  //     const storedDays = Number(localStorage.getItem("Days"));
-  //     const storedGuests = Number(localStorage.getItem("Guest"));
-
-  //     const parsedCheckInDate =
-  //       storedCheckInDate && storedCheckInDate !== "undefined"
-  //         ? dayjs(JSON.parse(storedCheckInDate))
-  //         : null;
-
-  //     const parsedCheckOutDate =
-  //       storedCheckOutDate && storedCheckOutDate !== "undefined"
-  //         ? dayjs(JSON.parse(storedCheckOutDate))
-  //         : null;
-  //     const parsedCheckInTime =
-  //       storedCheckInTime && storedCheckInTime !== "undefined"
-  //         ? dayjs(JSON.parse(storedCheckInTime as string))
-  //         : null;
-
-  //     const parsedCheckOutTime =
-  //       storedCheckOutTime && storedCheckOutTime !== "undefined"
-  //         ? dayjs(JSON.parse(storedCheckOutTime as string))
-  //         : null;
-
-  //     setRoomID(storedRoomID);
-  //     console.log("Room ID on local storage", storedRoomID);
-  //     setCheckInDate(parsedCheckInDate);
-  //     setCheckOutDate(parsedCheckOutDate);
-  //     setCheckInTime(parsedCheckInTime);
-  //     setCheckOutTime(parsedCheckOutTime);
-  //     setDays(storedDays);
-  //     setGuest(storedGuests);
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     localStorage.setItem("Check In Date", JSON.stringify(checkInDate));
-  //     localStorage.setItem("Check Out Date", JSON.stringify(checkOutDate));
-  //     localStorage.setItem("Check In Time", JSON.stringify(checkInTime));
-  //     localStorage.setItem("Check Out Time", JSON.stringify(checkOutTime));
-  //     localStorage.setItem("Room ID", roomID || "");
-
-  //     // Make sure guests is a number before saving
-  //     localStorage.setItem("Guest", guest?.toString() || "");
-
-  //     // Calculate and store the number of days
-
-  //     localStorage.setItem("Days", countedDays.toString());
-  //   }
-  // }, [checkInDate, checkOutDate, checkInTime, checkOutTime, guest, roomID]);
-
-  console.log("Days: ", days);
-
   const formatTime = (date: Dayjs | null): string => {
     if (!date) return "";
 
@@ -252,6 +210,27 @@ export default function Room({ params }: RoomID) {
   const formattedCheckOutTime = formatTime(checkOutTime);
 
   const timeCalculated = calculatedTime(checkInTime, checkOutTime);
+
+  useEffect(() => {
+    const getRatedFeedbackRoom = async () => {
+      try {
+        const docRef = collection(db, "boarders");
+        const q = query(docRef, where("BC_RenterRoomID", "==", id));
+        const docSnap = await getDocs(q);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setRatedFeedback(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    getRatedFeedbackRoom();
+  }, [id]);
 
   const fetchRoomById = async (id: string) => {
     try {
@@ -364,6 +343,23 @@ export default function Room({ params }: RoomID) {
   };
 
   useEffect(() => {
+    const getRateAndFeedback = async () => {
+      try {
+        const docRef = doc(db, "board", id);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const result = { id: docSnap.id, ...(docSnap.data() as Rated) };
+          setRoomRate(result);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getRateAndFeedback();
+  }, [id]);
+
+  useEffect(() => {
     const getMyStatus = async () => {
       const userUID = userData[0]?.User_UID;
       const docRef = collection(db, "boarders");
@@ -450,9 +446,7 @@ export default function Room({ params }: RoomID) {
             </h1>
           </div>
           <div className="flex justify-end">
-            <a className="font-hind text-base font-bold text-end text-[#006B95]">
-              Leave a Review
-            </a>
+            <Rate value={roomRate?.Renter_Room_Total_Rating} disabled />
           </div>
           <div className="h-96 flex justify-center items-center bg-white rounded-2xl drop-shadow-2xl">
             <h1 className="font-montserrat text-xl font-bold">
@@ -764,6 +758,36 @@ export default function Room({ params }: RoomID) {
             </div>
           </div>
         </div>
+      </div>
+      <div className="my-8 flex flex-col mx-44">
+        <h1 className="font-montserrat font-bold text-2xl my-7">
+          Feedback And Rates:
+        </h1>
+        {ratedFeedback?.map((data, index) => {
+          return (
+            <div
+              key={index}
+              className="grid grid-cols-7 pt-4 gap-2 h-64 rounded-lg border-slate-300 border-[1px] bg-white drop-shadow-md"
+            >
+              <div className="h-12 w-12 mt-4 flex justify-center items-center rounded-full capitalize font-montserrat font-bold text-[#393939] text-lg mx-auto border-[1px] border-slate-300">
+                {data?.BC_BoarderFullName?.charAt(0)}
+              </div>
+              <div className="col-span-6 mt-4">
+                <h1 className="font-montserrat font-bold text-[#393939] capitalize text-xl">
+                  {data?.BC_BoarderFullName}
+                </h1>
+                <Rate
+                  value={data?.BC_BoarderRateFeedback?.rate}
+                  className="mt-2"
+                />
+                <div className="bg-slate-400 w-11/12 rounded-full h-0.5 my-4" />
+                <div className="font-hind text-[#393939] text-base">
+                  {data?.BC_BoarderRateFeedback?.feedback}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

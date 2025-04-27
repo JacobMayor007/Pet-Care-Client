@@ -47,6 +47,7 @@ interface Memorial {
   mortician_memorial_address?: string;
   mortician_memorial_name?: string;
   mortician_memorial_payments?: [];
+  mortician_total_rating?: number;
   mortician_memorial_working_days?: number[];
   mortician_uid?: string;
 }
@@ -289,7 +290,7 @@ export default function ViewMemorial({ params }: MemorialId) {
       <nav className="relative z-20">
         <ClientNavbar />
       </nav>
-      <div className="grid grid-cols-5 mx-56">
+      <div className="grid grid-cols-5 mx-56 ">
         <h1 className="col-span-5 flex flex-row gap-4 items-center font-montserrat font-bold text-[#393939] text-3xl my-8">
           <FontAwesomeIcon
             icon={faArrowLeft}
@@ -300,7 +301,6 @@ export default function ViewMemorial({ params }: MemorialId) {
           />
           Memorial&#39;s Profile
         </h1>
-
         <div className="h-40 w-40 rounded-full border-[1px] capitalize font-montserrat font-bold text-[#393939] text-3xl drop-shadow-md bg-white border-slate-300 flex justify-center items-center">
           {memorial?.mortician_fullname?.charAt(0)}
         </div>
@@ -308,6 +308,11 @@ export default function ViewMemorial({ params }: MemorialId) {
           <h1 className="capitalize font-montserrat font-bold text-3xl">
             {memorial?.mortician_fullname}
           </h1>
+          <Rate
+            className="absolute top-0 right-20"
+            value={memorial?.mortician_total_rating}
+          />
+
           <h1 className="font-hind text-lg text-[#393939] mt-1">
             {memorial?.mortician_email}
           </h1>
@@ -322,10 +327,8 @@ export default function ViewMemorial({ params }: MemorialId) {
             Contact: {memorial?.mortician_contact}
           </h1>
         </div>
-        <div className="col-span-5 my-16">
-          <h1 className="font-montserrat font-bold text-2xl">About</h1>
-        </div>
-        <div className="col-span-5 my-8">
+
+        <div className="col-span-5 my-20">
           <h1 className="font-montserrat font-bold text-2xl">Services</h1>
           {memorial?.morticial_memorial_services?.map((data, index) => {
             return (

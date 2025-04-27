@@ -36,6 +36,7 @@ interface Sitters {
   sitter_uid?: string;
   sitter_working_days?: [];
   sitter_address?: string;
+  sitter_total_rating?: number;
 }
 
 interface SitterID {
@@ -348,19 +349,22 @@ export default function Sitter({ params }: SitterID) {
             Contact: {sitter?.sitter_contact}
           </h1>
           <h1 className="font-montserrat">Address: {sitter?.sitter_address}</h1>
+          <Rate
+            disabled
+            value={sitter?.sitter_total_rating}
+            className="absolute right-20 top-2"
+          />
           <h1
             onClick={() => setPetSitModal(true)}
-            className={`absolute right-10 -top-10 h-12 font-montserrat capitalize font-bold text-4xl flex justify-between`}
+            className={`absolute right-10 -top-20 h-12 font-montserrat capitalize font-bold text-4xl flex justify-between`}
           >
             <span className="text-lg flex items-center gap-2 px-4 rounded-full cursor-pointer bg-green-500 text-white">
               Offer to Pet Sit <FontAwesomeIcon icon={faCircleCheck} />{" "}
             </span>
           </h1>
         </div>
-        <div className="col-span-5 my-16">
-          <h1 className="font-montserrat font-bold text-2xl">About</h1>
-        </div>
-        <div className="col-span-2  my-8">
+
+        <div className="col-span-2  my-16">
           <h1 className="font-montserrat font-bold text-2xl">
             Available Days:
           </h1>

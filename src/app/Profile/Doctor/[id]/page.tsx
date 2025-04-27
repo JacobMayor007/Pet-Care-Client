@@ -5,30 +5,32 @@ import ClientNavbar from "@/app/ClientNavbar/page";
 import {
   addDoc,
   collection,
+  doc,
   DocumentData,
+  getDoc,
   getDocs,
   query,
   Timestamp,
   where,
 } from "firebase/firestore";
-import fetchProfile, { fetchIsDoctor } from "./fetchProfile";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "@ant-design/v5-patch-for-react-19";
 import {
   faArrowLeft,
+  faCheck,
   faCircleCheck,
   faEnvelope,
   faMapPin,
   faPhone,
-  faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 // import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { DatePicker, Modal, Select } from "antd";
+import { DatePicker, Modal, Rate, Select } from "antd";
 import dayjs, { Dayjs } from "dayjs";
 import { db } from "@/app/firebase/config";
 import { getMyPets } from "@/app/Appointments/mypet";
 import fetchUserData from "@/app/fetchData/fetchUserData";
+
 interface doctorID {
   params: Promise<{ id: string }>;
 }
@@ -62,6 +64,15 @@ interface Doctor {
   doctor_time_out?: string;
   doctor_title?: string;
   doctor_uid?: string;
+}
+
+interface RateAndFeedback {
+  id?: string;
+  Appointment_PatientFullName?: string;
+  Appointment_Rate_Feedback?: {
+    feedback?: string;
+    rate?: number;
+  };
 }
 
 interface MyPets {
@@ -167,18 +178,24 @@ function DoctorProfile(props: { id: string }) {
     },
   ];
 
+  interface AppointmentStatus {
+    id?: string;
+    Appointment_Status?: string;
+  }
+
   const [typeOfPayment, setTypeOfPayment] = useState("");
   const [petName, setPetName] = useState("");
   const [petBreed, setPetBreed] = useState("");
   const [petYear, setPetYear] = useState(0);
   const [petMonth, setPetMonth] = useState(0);
   const [petMM, setPetMM] = useState(0);
+  const [successful, setSuccessful] = useState(false);
   const [petHg, setPetHg] = useState(0);
+  const [rateAndFeedback, setRateAndFeedback] = useState<RateAndFeedback[]>([]);
   const [dateModal, setDateModal] = useState(false);
   const [bookModal, setBookModal] = useState(false);
-  const [isDoctor, setIsDoctor] = useState<boolean | null>(false);
   const [userData, setUserData] = useState<DocumentData[]>([]);
-  const [doctor, setDoctor] = useState<Doctor[]>([]);
+  const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState<Dayjs | null>(dayjs());
   const [myPets, setMyPets] = useState<MyPets[]>([]);
@@ -188,6 +205,7 @@ function DoctorProfile(props: { id: string }) {
   const [confirmModal, setConfirmModal] = useState(false);
   const [selectedPet, setSelectedPet] = useState<MyPets | null>(null);
   const [doctorSkill, setDoctorSkill] = useState("");
+  const [status, setStatus] = useState<AppointmentStatus[]>([]);
 
   useEffect(() => {
     const closeShowAppointments = (e: MouseEvent) => {
@@ -209,7 +227,6 @@ function DoctorProfile(props: { id: string }) {
       try {
         setLoading(true);
         const fetched = await fetchUserData();
-        console.log(fetched ? "true" : "false");
 
         setUserData(fetched);
       } catch (error) {
@@ -233,21 +250,39 @@ function DoctorProfile(props: { id: string }) {
     fetchedMyPets();
   }, [userData]);
 
-  const userType = userData[0]?.User_UID;
-
   useEffect(() => {
-    const itsDoctor = async () => {
-      const doctor = await fetchIsDoctor(userType);
-      setIsDoctor(doctor);
+    const getMyRateAndFeedback = async () => {
+      try {
+        const docRef = collection(db, "appointments");
+        const q = query(docRef, where("Appointment_DoctorUID", "==", props.id));
+        const docSnap = await getDocs(q);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setRateAndFeedback(result);
+      } catch (error) {
+        console.error(error);
+      }
     };
-    itsDoctor();
-  }, [userType]);
+    getMyRateAndFeedback();
+  }, [props.id]);
 
   useEffect(() => {
     const getDoctor = async () => {
-      const profile = await fetchProfile(props.id);
+      try {
+        const docRef = doc(db, "doctor", props.id);
+        const docSnap = await getDoc(docRef);
 
-      setDoctor(profile);
+        if (docSnap.exists()) {
+          const result = { id: docSnap.id, ...(docSnap.data() as Doctor) };
+          setDoctor(result);
+        }
+      } catch {
+        return [];
+      }
     };
 
     getDoctor();
@@ -261,6 +296,34 @@ function DoctorProfile(props: { id: string }) {
       setBookModal(true);
     }
   };
+
+  useEffect(() => {
+    const getMyAppointmentStatus = async () => {
+      try {
+        const docRef = collection(db, "appointments");
+        const q = query(
+          docRef,
+          where(
+            "Appointment_PatientUserUID",
+            "==",
+            userData[0]?.User_UID || ""
+          ),
+          where("Appointment_DoctorUID", "==", doctor?.doctor_uid)
+        );
+        const docSnap = await getDocs(q);
+
+        const result = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setStatus(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getMyAppointmentStatus();
+  }, [userData, doctor]);
 
   if (loading) {
     return (
@@ -288,18 +351,12 @@ function DoctorProfile(props: { id: string }) {
           : new Date(date) // Convert to Date if it's a string
       );
 
-      const matchingDoctor = doctor.find((data) => data.doctor_uid === id);
-
-      if (!matchingDoctor) {
-        throw new Error("Matching doctor not found.");
-      }
-
       const patientUserUID = userData[0]?.User_UID || "";
       const docRef = collection(db, "appointments");
       const docNotifRef = collection(db, "notifications");
       const q = query(
         docRef,
-        where("Appointment_DoctorUID", "==", matchingDoctor.doctor_uid),
+        where("Appointment_DoctorUID", "==", doctor?.doctor_uid || ""),
         where("Appointment_PatientUserUID", "==", patientUserUID)
       );
       const querySnapshot = await getDocs(q);
@@ -311,13 +368,13 @@ function DoctorProfile(props: { id: string }) {
         Appointment_PatientFullName: fullName,
         Appointment_CreatedAt: Timestamp.now(),
         Appointment_PatientUserUID: patientUserUID,
-        Appointment_DoctorEmail: matchingDoctor?.doctor_email,
-        Appointment_DoctorName: matchingDoctor?.doctor_name,
+        Appointment_DoctorEmail: doctor?.doctor_email,
+        Appointment_DoctorName: doctor?.doctor_name,
         Appointment_TypeOfAppointment: doctorSkill,
         Appointment_Date: appointmentDate,
-        Appointment_DoctorUID: matchingDoctor.doctor_uid,
-        Appointment_Location: matchingDoctor.doctor_clinicAddress,
-        Appointment_DoctorPNumber: matchingDoctor.doctor_contact,
+        Appointment_DoctorUID: doctor?.doctor_uid,
+        Appointment_Location: doctor?.doctor_clinicAddress,
+        Appointment_DoctorPNumber: doctor?.doctor_contact,
         Appointment_PatientPetAge: {
           Year: selectedPet ? selectedPet?.pet_age?.year : petYear,
           Month: selectedPet ? selectedPet.pet_age?.month : petMonth,
@@ -343,20 +400,21 @@ function DoctorProfile(props: { id: string }) {
       const notifAppointments = await addDoc(docNotifRef, {
         appointment_ID: addAppointments.id,
         createdAt: Timestamp.now(),
-        receiverID: matchingDoctor.doctor_uid,
+        receiverID: doctor?.doctor_uid,
         hide: false,
         message: `${fullName} requesting to have a schedule`,
         senderID: patientUserUID,
         open: false,
         status: "unread",
-        title: `Appointment Request with ${matchingDoctor?.doctor_uid}`,
+        title: `Appointment Request with ${doctor?.doctor_uid}`,
         type: userAppointment,
         sender_FullName: fullName,
-        receiver_FullName: matchingDoctor?.doctor_name,
+        receiver_FullName: doctor?.doctor_name,
         isApprove: false,
       });
 
       console.log("Appointment added:");
+      setSuccessful(true);
 
       // Log whether the patient is new or old
       console.log(
@@ -371,151 +429,175 @@ function DoctorProfile(props: { id: string }) {
     }
   };
 
-  // const convertTimeToTimestamp = (time: Dayjs | null) => {
-  //   if (time) {
-  //     return Timestamp.fromDate(time.toDate());
-  //   }
-  //   return null;
-  // };
-
-  // const convertDateToTimestamp = (date: Dayjs | null) => {
-  //   if (date) {
-  //     return Timestamp.fromDate(date.toDate());
-  //   }
-  //   return null;
-  // };
-
   const doctor_skill = [{}];
 
-  doctor?.forEach((data, index) => {
-    if (data?.doctor_specialty) {
-      doctor_skill.push({
-        key: `${index}-specialty`,
-        value: data.doctor_specialty,
-        label: data.doctor_specialty,
-      });
-    }
+  if (doctor?.doctor_specialty) {
+    doctor_skill.push({
+      key: `${doctor?.id}-specialty`,
+      value: doctor?.doctor_specialty,
+      label: doctor?.doctor_specialty,
+    });
+  }
 
-    if (data?.doctor_sub_specialty) {
-      doctor_skill.push({
-        key: `${index}-sub-specialty`,
-        value: data.doctor_sub_specialty,
-        label: data.doctor_sub_specialty,
-      });
-    }
-  });
+  if (doctor?.doctor_sub_specialty) {
+    doctor_skill.push({
+      key: `${doctor?.id}-sub-specialty`,
+      value: doctor.doctor_sub_specialty,
+      label: doctor.doctor_sub_specialty,
+    });
+  }
+
+  if (successful) {
+    setInterval(() => {
+      setSuccessful(false);
+    }, 1500);
+    return (
+      <div className="h-screen">
+        <div className="flex flex-row items-center justify-center mt-32 gap-4">
+          <div className=" h-24 w-24 bg-white rounded-full flex items-center justify-center p-1 animate-bounce">
+            <div className="h-full w-full rounded-full bg-[#25CA85] flex items-center justify-center flex-row">
+              <FontAwesomeIcon icon={faCheck} className="text-white h-14" />{" "}
+            </div>
+          </div>
+          <h1 className="font-montserrat font-bold text-3xl animate-bounce">
+            Offer Request Is Succeful!
+          </h1>
+        </div>
+      </div>
+    );
+  }
+
+  console.log(status);
 
   return (
     <div className="h-full mx-52 py-4">
-      {isDoctor ? (
-        <h1 className="font-montserrat mt-4 mb-8 font-bold text-4xl flex gap-5 items-center">
-          {" "}
-          <FontAwesomeIcon icon={faArrowLeft} /> My Profile
-        </h1>
-      ) : (
-        <h1 className="font-montserrat mt-4 mb-8 font-bold text-4xl flex gap-5 items-center">
+      <div className="flex justify-between flex-row items-center">
+        <h1 className="font-montserrat mt-4 mb-8 font-bold text-3xl flex gap-5 items-center">
           <Link href="/">
             <FontAwesomeIcon icon={faArrowLeft} /> Doctor&#39;s Profile
           </Link>
         </h1>
+        {(status[0]?.Appointment_Status === "Paid" ||
+          !status[0]?.Appointment_Status) && (
+          <span className="flex flex-col gap-2 text-center">
+            <span
+              className="text-lg flex items-center gap-2 font-montserrat font-bold px-4 py-2 rounded-full cursor-pointer bg-green-500 text-white"
+              onClick={() => setDateModal(true)}
+            >
+              Consult Now <FontAwesomeIcon icon={faCircleCheck} />
+            </span>
+          </span>
+        )}
+      </div>
+      {status[0]?.Appointment_Status !== "Paid" && (
+        <h1
+          className={`font-montserrat mt-16 mb-8 capitalize font-bold text-4xl flex flex-row 
+          justify-between`}
+        >
+          {doctor?.doctor_title} {doctor?.doctor_name}
+          <span className="bg-green-600 text-white px-7 text-2xl py-2 rounded-lg">
+            {status[0]?.Appointment_Status}
+          </span>
+        </h1>
       )}
-      <div className="p-4">
-        {doctor.map((data) => {
-          return (
-            <div key={data?.id} className="grid grid-cols-5 w-full">
-              <div className="h-48 w-48 text-center rounded-full bg-white drop-shadow-lg flex justify-center items-center font-montserrat text-xl">
-                Image of {data?.doctor_name}
-              </div>
-              <div className="flex flex-col gap-4 w-full col-span-4 ">
-                <h1
-                  className={`font-montserrat capitalize font-bold text-4xl ${
-                    isDoctor ? `hidden` : `flex`
-                  } justify-between`}
-                >
-                  {data?.doctor_title} {data?.doctor_name}
-                  <span
-                    className="text-lg flex items-center gap-2 px-4 rounded-full cursor-pointer bg-green-500 text-white"
-                    onClick={() => setDateModal(true)}
-                  >
-                    Consult Now <FontAwesomeIcon icon={faCircleCheck} />{" "}
-                  </span>
-                </h1>
 
-                <div className="w-full border-[1px] border-[#C3C3C3]" />
-                <p className="font-montserrat text-lg">
-                  <FontAwesomeIcon
-                    icon={faMapPin}
-                    className="mr-2 text-red-500"
-                  />{" "}
-                  {data?.doctor_clinicAddress}
-                </p>
-                <p className="font-montserrat text-lg">
-                  <FontAwesomeIcon icon={faPhone} className="mr-2" />{" "}
-                  {data?.doctor_contact}
-                </p>
-                <p className="font-montserrat text-lg">
-                  {" "}
-                  <FontAwesomeIcon
-                    icon={faEnvelope}
-                    className="mr-2 text-slate-400"
-                  />{" "}
-                  {data?.doctor_email}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+      <div className="p-4">
+        <div className=" mb-8 flex flex-row items-center justify-between">
+          <h1 className="font-montserrat capitalize font-bold text-4xl flex justify-between">
+            {doctor?.doctor_title} {doctor?.doctor_name}
+          </h1>
+          <Rate value={doctor?.doctor_rating} disabled />
+        </div>
+
+        <div className="grid grid-cols-5 w-full">
+          <div className="h-48 w-48 text-center rounded-full bg-white drop-shadow-lg flex justify-center items-center font-montserrat text-xl">
+            Image of {doctor?.doctor_name}
+          </div>
+          <div className="flex flex-col gap-4 w-full col-span-4 ">
+            <div className="w-full border-[1px] border-[#C3C3C3]" />
+            <p className="font-montserrat text-lg">
+              <FontAwesomeIcon icon={faMapPin} className="mr-2 text-red-500" />{" "}
+              {doctor?.doctor_clinicAddress}
+            </p>
+            <p className="font-montserrat text-lg">
+              <FontAwesomeIcon icon={faPhone} className="mr-2" />{" "}
+              {doctor?.doctor_contact}
+            </p>
+            <p className="font-montserrat text-lg">
+              {" "}
+              <FontAwesomeIcon
+                icon={faEnvelope}
+                className="mr-2 text-slate-400"
+              />{" "}
+              {doctor?.doctor_email}
+            </p>
+          </div>
+        </div>
       </div>
       <div className="flex flex-col mt-8 ">
-        {doctor.map((data, index) => {
+        <div className="flex flex-col gap-20">
+          <div className="flex flex-col gap-4 ">
+            <h1 className="font-montserrat font-bold text-3xl flex justify-between cursor-pointer">
+              Details
+            </h1>
+            <p className="flex flex-col gap-4 font-montserrat font-medium text-[#393939] pr-20 leading-7 text-justify">
+              {doctor?.doctor_details}
+            </p>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h1 className="font-montserrat font-bold text-3xl flex justify-between cursor-pointer">
+              Services
+            </h1>
+            <ul className="bg-white font-hind text-center text-xl drop-shadow-lg w-80 py-4 rounded-md">
+              <li>{doctor?.doctor_specialty}</li>
+            </ul>
+          </div>
+          <div className=" w-fit mb-8 h-52 bg-white drop-shadow-md rounded-md items-center p-4 grid grid-cols-3">
+            <h1 className=" col-span-3 font-montserrat font-bold text-4xl mb-5">
+              Working Hours
+            </h1>
+            <span className="grid grid-cols-3 items-start mr-4 bg-[#006B95] text-white p-4 rounded-md">
+              {doctor?.doctor_available_days?.map((day, dayIndex) => {
+                const weekDay = weeks.find((week) => week.key === day)?.label;
+                return (
+                  <span key={dayIndex} className="text-center">
+                    {weekDay}
+                  </span>
+                );
+              })}
+            </span>
+            <div className="text-center">
+              <h1>Time In:</h1>
+              {doctor?.doctor_time_in}
+            </div>
+            <div className="text-center">
+              <h1>Time Out:</h1>
+              {doctor?.doctor_time_out}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="my-8 h-full flex flex-col gap-4">
+        <h1 className="font-montserrat font-bold text-[#393939] text-3xl">
+          Feedback and Rate
+        </h1>
+        {rateAndFeedback.map((data, index) => {
           return (
-            <div key={index} className="flex flex-col gap-20">
-              <div className="flex flex-col gap-4 ">
-                <h1 className="font-montserrat font-bold text-3xl flex justify-between cursor-pointer">
-                  Details
-                  {isDoctor ? (
-                    <span className="mr-20">
-                      <FontAwesomeIcon icon={faPlus} />
-                    </span>
-                  ) : (
-                    <span className="hidden" />
-                  )}
-                </h1>
-                <p className="flex flex-col gap-4 font-montserrat font-medium text-[#393939] pr-20 leading-7 text-justify">
-                  {data?.doctor_details}
-                </p>
+            <div
+              key={index}
+              className="grid grid-cols-11 h-56 bg-white drop-shadow-md rounded-md border-slate-300 border-[1px] pt-6"
+            >
+              <div className="border-[1px] mx-auto  border-slate-300 rounded-full w-14 h-14 flex items-center justify-center capitalize font-montserrat font-bold text-xl">
+                {data?.Appointment_PatientFullName?.charAt(0)}
               </div>
-              <div className="flex flex-col gap-4">
-                <h1 className="font-montserrat font-bold text-3xl flex justify-between cursor-pointer">
-                  Services
+              <div className="col-span-10">
+                <h1 className="font-montserrat font-bold text-[#393939] text-lg capitalize">
+                  {data?.Appointment_PatientFullName}
                 </h1>
-                <ul className="bg-white font-hind text-center text-xl drop-shadow-lg w-80 py-4 rounded-md">
-                  <li>{data?.doctor_specialty}</li>
-                </ul>
-              </div>
-              <div className=" w-fit mb-8 h-52 bg-white drop-shadow-md rounded-md items-center p-4 grid grid-cols-3">
-                <h1 className=" col-span-3 font-montserrat font-bold text-4xl mb-5">
-                  Working Hours
-                </h1>
-                <span className="grid grid-cols-3 items-start mr-4 bg-[#006B95] text-white p-4 rounded-md">
-                  {data?.doctor_available_days?.map((day, dayIndex) => {
-                    const weekDay = weeks.find(
-                      (week) => week.key === day
-                    )?.label;
-                    return (
-                      <span key={dayIndex} className="text-center">
-                        {weekDay}
-                      </span>
-                    );
-                  })}
-                </span>
-                <div className="text-center">
-                  <h1>Time In:</h1>
-                  {data?.doctor_time_in}
-                </div>
-                <div className="text-center">
-                  <h1>Time Out:</h1>
-                  {data?.doctor_time_out}
+                <Rate value={data?.Appointment_Rate_Feedback?.rate} disabled />
+                <div className="h-0.5 bg-slate-300 rounded-full my-4 w-11/12" />
+                <div className="font-hind text-base font-medium text-[#393939] w-11/12">
+                  {data?.Appointment_Rate_Feedback?.feedback}
                 </div>
               </div>
             </div>
@@ -561,10 +643,8 @@ function DoctorProfile(props: { id: string }) {
           >
             {showAppointments && (
               <div>
-                {doctor.map((data, index) => {
-                  return (
-                    <div key={index}>
-                      {/* <h1
+                <div>
+                  {/* <h1
                         className="font-hind text-base font-medium flex flex-col"
                         onClick={() => {
                           setUserAppointment(
@@ -575,23 +655,21 @@ function DoctorProfile(props: { id: string }) {
                       >
                         {data?.User_TypeOfAppointment?.map((data) => data)}
                       </h1> */}
-                      {data?.User_TypeOfAppointment?.map((data, index) => {
-                        return (
-                          <h1
-                            key={index}
-                            className="font-hind font-medium flex flex-col py-2 px-4 cursor-pointer hover:bg-slate-300"
-                            onClick={() => {
-                              setUserAppointment(data);
-                              setShowAppointments(false);
-                            }}
-                          >
-                            {data}
-                          </h1>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
+                  {doctor?.User_TypeOfAppointment?.map((data, index) => {
+                    return (
+                      <h1
+                        key={index}
+                        className="font-hind font-medium flex flex-col py-2 px-4 cursor-pointer hover:bg-slate-300"
+                        onClick={() => {
+                          setUserAppointment(data);
+                          setShowAppointments(false);
+                        }}
+                      >
+                        {data}
+                      </h1>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -607,7 +685,7 @@ function DoctorProfile(props: { id: string }) {
         }}
       >
         <p className="font-montserrat font-bold text-[#393939]">
-          Do you wish to have an appointment with {doctor[0]?.doctor_name}
+          Do you wish to have an appointment with {doctor?.doctor_name}
         </p>
         <div className="grid grid-cols-3 items-center w-fit my-5 gap-4">
           {myPets.length > 0 ? (
@@ -803,12 +881,15 @@ function DoctorProfile(props: { id: string }) {
         open={confirmModal}
         onCancel={() => setConfirmModal(false)}
         onOk={() => {
-          onSubmit(doctor[0]?.doctor_uid || "");
+          onSubmit(doctor?.doctor_uid || "");
           setConfirmModal(false);
         }}
         centered={true}
       >
-        Please confirm your appointment on {doctor[0]?.User_Name}
+        Please confirm your appointment on{" "}
+        <span className="font-montserrat font-bold text-[#006B95] capitalize">
+          {doctor?.doctor_name}
+        </span>
       </Modal>
     </div>
   );

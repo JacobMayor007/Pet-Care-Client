@@ -2,11 +2,22 @@
 
 import ClientNavbar from "@/app/ClientNavbar/page";
 import React, { useEffect, useState } from "react";
-import { feedBackRoom, fetchBookedDetails } from "./room";
+import { fetchBookedDetails } from "./room";
 import dayjs, { Dayjs } from "dayjs";
-import { Timestamp } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import Image from "next/image";
 import { Rate, Modal } from "antd";
+import { db } from "@/app/firebase/config";
 
 interface RoomID {
   params: Promise<{ id: string }>;
@@ -33,7 +44,10 @@ interface BoardDetails {
   BC_BoarderDietaryRestrictions?: string;
   BC_BoarderGuest?: string;
   BC_BoarderStatus?: string;
-  BC_BoarderRate?: number;
+  BC_BoarderRateFeedback?: {
+    rate: number;
+    feedback: string;
+  };
   BC_BoarderTotalPrice?: number;
   BC_BoarderUpdated?: Dayjs | null;
   BC_BoarderTypeRoom?: string;
@@ -90,6 +104,80 @@ export default function MyRooms({ params }: RoomID) {
 
     Myrooms();
   }, [id]);
+
+  const feedbackHandle = async () => {
+    try {
+      const docRef = doc(db, "boarders", id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const notifRef = collection(db, "notifications");
+        await addDoc(notifRef, {
+          createdAt: Timestamp.now(),
+          hide: false,
+          boardID: id,
+          rate: star,
+          message: `${boardDetails?.BC_BoarderFullName} rated your room`,
+          open: false,
+          senderID: boardDetails?.BC_BoarderUID,
+          receiverID: boardDetails?.BC_RenterUID,
+          status: "unread",
+          title: `Rate ${boardDetails?.BC_BoarderFullName} room`,
+        });
+
+        await updateDoc(docRef, {
+          BC_BoarderRateFeedback: {
+            rate: star,
+            feedback: feedback,
+          },
+          BC_BoarderDescriptor: descriptor[star - 1],
+        });
+
+        const boardersRef = collection(db, "boarders");
+        const q = query(
+          boardersRef,
+          where("BC_RenterUID", "==", boardDetails?.BC_RenterUID)
+        );
+        const querySnapshot = await getDocs(q);
+
+        const ratingArray: number[] = [];
+        querySnapshot.forEach((doc) => {
+          const renterData = doc.data();
+          const rating = renterData.BC_BoarderRateFeedback?.rate;
+
+          if (typeof rating === "number") {
+            ratingArray.push(rating);
+          }
+        });
+
+        // Calculate the average rating
+        let averageRating = 0;
+        if (ratingArray.length > 0) {
+          const total = ratingArray.reduce((sum, current) => sum + current, 0);
+          averageRating = total / ratingArray.length;
+        }
+
+        const broadRef = doc(db, "board", boardDetails?.BC_RenterRoomID || "");
+        const productSnap = await getDoc(broadRef);
+
+        if (productSnap.exists()) {
+          await updateDoc(broadRef, {
+            Renter_Room_Total_Rating: Math.trunc(averageRating),
+          });
+          console.log(
+            `Updated Renter Room Total Rating for board collection ${boardDetails?.BC_RenterRoomID} to ${averageRating}`
+          );
+        } else {
+          console.error(
+            `Mortician with ID ${boardDetails?.BC_RenterRoomID} not found in 'memorial' collection.`
+          );
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      return null;
+    }
+  };
 
   return (
     <div className="h-screen">
@@ -166,19 +254,21 @@ export default function MyRooms({ params }: RoomID) {
           <h1 className="my-auto text-center font-bold font-montserrat text-[#006B95]">
             {boardDetails?.BC_BoarderStatus}
           </h1>
-          {boardDetails?.BC_BoarderRate ? (
+          {boardDetails?.BC_BoarderRateFeedback?.rate && (
             <Rate
               className="m-auto"
-              defaultValue={boardDetails?.BC_BoarderRate}
+              defaultValue={boardDetails?.BC_BoarderRateFeedback.rate}
             />
-          ) : (
-            <button
-              onClick={() => setShowRateModal(true)}
-              className="m-auto py-2 px-3 bg-[#006B95] font-hind text-white font-bold rounded-lg"
-            >
-              Please Rate {boardDetails?.BC_RenterRoomName}
-            </button>
           )}
+          {boardDetails?.BC_BoarderStatus === "Paid" &&
+            !boardDetails.BC_BoarderRateFeedback?.rate && (
+              <button
+                onClick={() => setShowRateModal(true)}
+                className="m-auto py-2 px-3 bg-[#006B95] font-hind text-white font-bold rounded-lg"
+              >
+                Please Rate {boardDetails?.BC_RenterRoomName}
+              </button>
+            )}
         </div>
         <Modal
           open={showRateModal}
@@ -186,16 +276,7 @@ export default function MyRooms({ params }: RoomID) {
           onClose={() => setShowRateModal(false)}
           onOk={() => {
             setShowRateModal(false);
-            feedBackRoom(
-              boardDetails?.boardId || "",
-              boardDetails?.BC_BoarderUID || "",
-              boardDetails?.BC_RenterUID || "",
-              star,
-              feedback,
-              boardDetails?.BC_BoarderFullName || "",
-              boardDetails?.BC_RenterFullName || "",
-              descriptor[star - 1]
-            );
+            feedbackHandle();
           }}
           centered
         >
