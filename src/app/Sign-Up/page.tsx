@@ -4,8 +4,18 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
-import { FacebookAuthProvider, getAuth, signInWithPopup } from "firebase/auth";
-import { getFirestore, doc, setDoc, Timestamp } from "firebase/firestore";
+import { FacebookAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  Timestamp,
+  query,
+  collection,
+  where,
+  getDocs,
+  getDoc,
+} from "firebase/firestore";
 import Link from "next/link";
 import { FacebookOutlined, GoogleOutlined } from "@ant-design/icons";
 
@@ -29,46 +39,76 @@ export default function SignUp() {
     const regex = /^(?=.*[!@#$%^&*])(?=.*\d).{8,}$/;
     if (isSubmitting) return;
 
-    setIsSubmitting(true); // Prevent further clicks
+    setIsSubmitting(true);
 
     // Basic Validation
     if (!fName || !lName || !email || !password || !confirmPassword) {
       alert("All fields are required.");
-      setIsSubmitting(false); // Re-enable the button
+      setIsSubmitting(false);
       return;
     }
 
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
-      setIsSubmitting(false); // Re-enable the button
+      setIsSubmitting(false);
       return;
     }
 
     if (!regex.test(password)) {
-      alert("Please input atleast one special character, and one number");
+      alert(
+        "Password must contain at least one special character and one number"
+      );
+      setIsSubmitting(false);
+      return;
     }
 
     if (!checkBox) {
-      alert("Please check the terms and conditions");
+      alert("Please accept the terms and conditions");
+      setIsSubmitting(false);
       return;
     }
 
     try {
+      // First check if email already exists in pending or approved users
+      const usersQuery = query(
+        collection(db, "Users"),
+        where("User_Email", "==", email)
+      );
+      const pendingQuery = query(
+        collection(db, "pending_users"),
+        where("User_Email", "==", email)
+      );
+
+      const [usersSnapshot, pendingSnapshot] = await Promise.all([
+        getDocs(usersQuery),
+        getDocs(pendingQuery),
+      ]);
+
+      if (!usersSnapshot.empty || !pendingSnapshot.empty) {
+        alert("This email is already registered or pending approval");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Create user with Firebase Authentication
       const res = await createUserWithEmailAndPassword(email, password);
       if (!res || !res.user) {
         throw new Error("Failed to create user. Please try again.");
       }
 
-      // Add user data to Firestore
-      const userRef = doc(db, "Users", res.user.uid);
-      await setDoc(userRef, {
-        User_Name: fName + " " + lName,
+      // Add user data to pending_users collection instead of Users
+      const pendingUserRef = doc(db, "pending_users", res.user.uid);
+      await setDoc(pendingUserRef, {
+        User_Name: `${fName} ${lName}`,
         User_Email: email,
         User_UID: res.user.uid,
         TermsAndConditions: checkBox,
         CreatedAt: Timestamp.now(),
+        status: "pending",
       });
+
+      // Sign out the user immediately after creation
+      await signOut(auth);
 
       // Clear input fields
       setEmail("");
@@ -77,10 +117,15 @@ export default function SignUp() {
       setFName("");
       setLName("");
 
-      // Redirect to login page or home page
-      router.push("/Login");
+      // Redirect to pending approval page
+      router.push("/pending-approval");
     } catch (error) {
       console.error("Error during sign-up:", error);
+      alert(
+        `Sign-up failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -89,58 +134,73 @@ export default function SignUp() {
   const googleAuth = async () => {
     try {
       if (!checkBox) {
-        alert("Please check the Terms, and Conditions");
-        return new Error("Failed to create user. Please try again.");
+        alert("Please accept the Terms and Conditions");
+        return;
       }
 
       const result = await signInWithPopup(auth, provider);
 
-      const userRef = doc(db, "Users", result.user.uid);
-      await setDoc(userRef, {
-        User_Name: result.user.displayName,
-        User_Email: result.user.email,
-        User_UID: result.user.uid,
-        CreatedAt: Timestamp.now(),
-        TermsAndConditions: checkBox,
-      });
+      // Check if user is already approved
+      const userDoc = await getDoc(doc(db, "Users", result.user.uid));
 
-      if (result) {
-        router.push("/");
-      } else {
-        router.push("/Sign-Up");
+      if (!userDoc.exists()) {
+        // Add to pending_users if not approved yet
+        await setDoc(doc(db, "pending_users", result.user.uid), {
+          User_Name: result.user.displayName,
+          User_Email: result.user.email,
+          User_UID: result.user.uid,
+          CreatedAt: Timestamp.now(),
+          TermsAndConditions: checkBox,
+          status: "pending",
+        });
+
+        // Sign out and show pending message
+        await signOut(auth);
+        router.push("/pending-approval");
+        return;
       }
+
+      // If already approved, proceed to dashboard
+      router.push("/");
     } catch (error) {
-      console.log(error);
+      console.error("Google auth error:", error);
+      alert("Google sign-in failed. Please try again.");
     }
   };
 
   const facebookAuth = async () => {
     try {
       if (!checkBox) {
-        alert("Please check the Terms, and Conditions");
-        return new Error("Failed to create user. Please try again.");
+        alert("Please accept the Terms and Conditions");
+        return;
       }
 
-      const result = await signInWithPopup(
-        getAuth(),
-        new FacebookAuthProvider()
-      );
-      const userRef = doc(db, "Users", result.user.uid);
-      await setDoc(userRef, {
-        User_Name: result.user.displayName,
-        User_Email: result.user.email,
-        User_UID: result.user.uid,
-        TermsAndConditions: checkBox,
-        CreatedAt: Timestamp.now(),
-      });
-      if (result) {
-        router.push("/");
-      } else {
-        router.push("/Sign-Up");
+      const result = await signInWithPopup(auth, new FacebookAuthProvider());
+
+      // Check if user is already approved
+      const userDoc = await getDoc(doc(db, "Users", result.user.uid));
+
+      if (!userDoc.exists()) {
+        // Add to pending_users if not approved yet
+        await setDoc(doc(db, "pending_users", result.user.uid), {
+          User_Name: result.user.displayName,
+          User_Email: result.user.email,
+          User_UID: result.user.uid,
+          CreatedAt: Timestamp.now(),
+          TermsAndConditions: checkBox,
+          status: "pending",
+        });
+
+        // Sign out and show pending message
+        await signOut(auth);
+        router.push("/pending-approval");
+        return;
       }
-      console.log("Facebook Sign In", result);
-    } catch (err) {
-      console.log(err);
+
+      router.push("/");
+    } catch (error) {
+      console.error("Facebook auth error:", error);
+      alert("Facebook sign-in failed. Please try again.");
     }
   };
 

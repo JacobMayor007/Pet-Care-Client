@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db, fbprovider, provider } from "../firebase/config";
-import { signInWithPopup } from "firebase/auth";
+import { getAuth, signInWithPopup, signOut } from "firebase/auth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { collection, getDocs, query, where } from "firebase/firestore";
@@ -21,7 +21,6 @@ export default function Login() {
   const [loginAs, setLoginAs] = useState("Pet Owner");
   const [loginAsDropDown, setLoginAsDropDown] = useState(false);
   const [userType, setUserType] = useState("client");
-  const [userRoute, setUserRoute] = useState("/");
 
   const loginAsData = [
     { key: 0, label: "Pet Owner", type: "client", route: "/Login" },
@@ -73,7 +72,20 @@ export default function Login() {
     try {
       setLoading(true);
 
+      const userRef = collection(db, "Users");
+      const q = query(userRef, where("User_Email", "==", email));
+      const docSnap = await getDocs(q);
+
+      if (docSnap.empty) {
+        alert(
+          "Invalid credentials, please register first, or please wait your account is pending for approval"
+        );
+        return;
+      }
       const result = await signingIn(email, password);
+      if (!result) {
+        alert("Invalid Credentials. Please enter correct email, and password");
+      }
       if (result) {
         return router.push("/");
       } else {
@@ -104,25 +116,26 @@ export default function Login() {
 
   const googleAuth = async () => {
     try {
-      if (userType === "client") {
-        await signInWithPopup(auth, provider);
-        return router.push("/");
-      }
+      const result = await signInWithPopup(auth, provider);
 
       const docRef = collection(db, userType);
-      const q = query(docRef, where("User_Email", "==", email));
+      const q = query(docRef, where("User_Email", "==", result.user.email));
       const docSnap = await getDocs(q);
 
       if (!docSnap.empty) {
-        await signInWithPopup(auth, provider);
-        return router.push(`${userRoute}`);
-      } else
+        return router.push(`/`);
+      } else {
+        const auth = getAuth();
+        signOut(auth).then(() => {
+          router.push("/Login");
+        });
         return (
           router.push("/Login"),
           alert(
             `This account is does not exist on ${loginAs}, go to the Sign Up Page if you want to register as ${loginAs}`
           )
         );
+      }
     } catch (error) {
       console.error(error);
     }
@@ -130,25 +143,26 @@ export default function Login() {
 
   const facebookAuth = async () => {
     try {
-      if (userType === "client") {
-        await signInWithPopup(auth, fbprovider);
-        router.push("/");
-      }
+      const result = await signInWithPopup(auth, fbprovider);
 
       const docRef = collection(db, userType);
-      const q = query(docRef, where("User_Email", "==", email));
+      const q = query(docRef, where("User_Email", "==", result.user.email));
       const docSnap = await getDocs(q);
 
       if (!docSnap.empty) {
-        await signInWithPopup(auth, fbprovider);
-        return router.push(`${userRoute}`);
-      } else
+        return router.push(`/`);
+      } else {
+        const auth = getAuth();
+        signOut(auth).then(() => {
+          router.push("/Login");
+        });
         return (
           router.push("/Login"),
           alert(
             `This account is does not exist on ${loginAs}, go to the Sign Up Page if you want to register as ${loginAs}`
           )
         );
+      }
     } catch (error) {
       console.error(error);
     }
@@ -198,7 +212,6 @@ export default function Login() {
                       setLoginAsDropDown(false);
                       setLoginAs(data?.label);
                       setUserType(data?.type);
-                      setUserRoute(data?.route);
                     }}
                   >
                     {data?.label}
