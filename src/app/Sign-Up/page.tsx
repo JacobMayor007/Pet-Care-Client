@@ -69,7 +69,6 @@ export default function SignUp() {
     }
 
     try {
-      // First check if email already exists in pending or approved users
       const usersQuery = query(
         collection(db, "Users"),
         where("User_Email", "==", email)
@@ -96,7 +95,6 @@ export default function SignUp() {
         throw new Error("Failed to create user. Please try again.");
       }
 
-      // Add user data to pending_users collection instead of Users
       const pendingUserRef = doc(db, "pending_users", res.user.uid);
       await setDoc(pendingUserRef, {
         User_Name: `${fName} ${lName}`,

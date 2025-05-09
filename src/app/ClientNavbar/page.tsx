@@ -345,6 +345,12 @@ export default function ClientNavbar() {
               >
                 My Profile
               </Link>
+              <Link
+                href={`/MyCart`}
+                className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
+              >
+                My Cart
+              </Link>
               <h1
                 onClick={() => setToMatchModal(true)}
                 className="text-center font-hind  h-full w-44 flex items-center justify-center border-b-[1px] border-[#B1B1B1]"
@@ -491,13 +497,16 @@ const UserNotification = () => {
           receiverEmail: data.receiverEmail
             ? data.receiverEmail.filter((user) => user !== userEmail)
             : [],
+          receiverUid: data?.receiverUid
+            ? data?.receiverUid.filter((user) => user !== userUID)
+            : [],
           timestamp: data.timestamp ? dayjs(data.timestamp.toDate()) : null,
         }))
       );
     });
 
     return () => unsubscribe(); // Ensure cleanup
-  }, [userEmail]);
+  }, [userEmail, userUID]);
 
   useEffect(() => {
     let unsubscribe: () => void;
@@ -505,9 +514,8 @@ const UserNotification = () => {
     const getMyNotifications = async () => {
       try {
         const data = await fetchUserData();
-        const userUID = data[0]?.User_UID;
         setUserEmail(data[0]?.User_Email);
-        setUserUID(data[0]?.User_Email);
+        setUserUID(data[0]?.User_UID);
         if (!userUID) {
           console.log("Logged In First");
 
@@ -537,10 +545,13 @@ const UserNotification = () => {
       <h1 className="font-hind text-lg mx-4 mt-4 mb-2">Notifications</h1>
       <div className="h-0.5 border-[#393939] w-full border-[1px] mb-2" />
       {myMatchingNotifications.map((data, index) => {
+        const matchedUserId =
+          data.receiverUid?.find((uid) => uid !== userUID) || "";
+
         return (
           <div
             key={index}
-            className=" drop-shadow-lg grid grid-cols-12 p-2 items-center"
+            className="drop-shadow-lg grid grid-cols-12 p-2 items-center"
           >
             <div className="m-2 h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
             <div className="grid grid-cols-12 my-2 col-span-11">
@@ -556,17 +567,17 @@ const UserNotification = () => {
                   <p className="text-xs text-[#797979]">
                     {data?.timestamp?.fromNow()}
                   </p>
-                  <Link
-                    href={`/Message/${data?.receiverUid?.find(
-                      (uid: string) => uid !== userUID
-                    )}`}
-                    className="place-self-end p-2 rounded-md bg-[#006B95] text-white"
-                  >
-                    Send A Message
-                  </Link>
+                  {matchedUserId && (
+                    <Link
+                      href={`/Message/${matchedUserId}`}
+                      className="place-self-end p-2 rounded-md bg-[#006B95] text-white"
+                    >
+                      Send A Message
+                    </Link>
+                  )}
                 </div>
               </div>
-              <div className="flex justify-center mt-0.5 ">
+              <div className="flex justify-center mt-0.5">
                 <FontAwesomeIcon icon={faEyeSlash} />
               </div>
             </div>

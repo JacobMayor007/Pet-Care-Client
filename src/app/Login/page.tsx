@@ -118,6 +118,17 @@ export default function Login() {
     try {
       const result = await signInWithPopup(auth, provider);
 
+      const userRef = collection(db, "Users");
+      const q2 = query(userRef, where("User_Email", "==", result.user.email));
+      const userSnap = await getDocs(q2);
+
+      if (userSnap.empty) {
+        alert(
+          "Invalid credentials, please register first, or please wait your account is pending for approval"
+        );
+        return;
+      }
+
       const docRef = collection(db, userType);
       const q = query(docRef, where("User_Email", "==", result.user.email));
       const docSnap = await getDocs(q);
@@ -144,6 +155,17 @@ export default function Login() {
   const facebookAuth = async () => {
     try {
       const result = await signInWithPopup(auth, fbprovider);
+
+      const userRef = collection(db, "Users");
+      const q2 = query(userRef, where("User_Email", "==", result.user.email));
+      const userSnap = await getDocs(q2);
+
+      if (userSnap.empty) {
+        alert(
+          "Invalid credentials, please register first, or please wait your account is pending for approval"
+        );
+        return;
+      }
 
       const docRef = collection(db, userType);
       const q = query(docRef, where("User_Email", "==", result.user.email));

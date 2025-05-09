@@ -14,7 +14,7 @@ import {
   getDocs,
   Timestamp,
 } from "firebase/firestore";
-import { faFileShield } from "@fortawesome/free-solid-svg-icons";
+import { faCheck, faFileShield } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
@@ -61,6 +61,7 @@ const Product = ({ params }: AppointmentID) => {
   const { id } = React.use(params);
   const [loading, setLoading] = useState(true);
   const [userUID, setUserUID] = useState("");
+  const [successful, setSuccessful] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>("");
   const [userData, setUserData] = useState<DocumentData[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
@@ -201,7 +202,7 @@ const Product = ({ params }: AppointmentID) => {
   }, [userEmail, userUID]);
 
   const addToCartProduct = async () => {
-    const fullName = userData.map((user) => `${user.User_Name}`);
+    const fullName = userData[0]?.User_Name;
 
     if (!userEmail) {
       router.push("/Login");
@@ -229,6 +230,7 @@ const Product = ({ params }: AppointmentID) => {
 
       console.log("Add to Cart product has been succesful", addToCartItem);
       setLoading(false);
+      setSuccessful(true);
     } catch (error) {
       console.log("Error", error);
     }
@@ -248,6 +250,27 @@ const Product = ({ params }: AppointmentID) => {
     return (
       <div className="h-screen flex justify-center items-center">
         <Loading />
+      </div>
+    );
+  }
+
+  if (successful) {
+    setInterval(() => {
+      setSuccessful(false);
+      router.push("/MyCart");
+    }, 1500);
+    return (
+      <div className="h-screen">
+        <div className="flex flex-row items-center justify-center mt-32 gap-4">
+          <div className=" h-24 w-24 bg-white rounded-full flex items-center justify-center p-1">
+            <div className="h-full w-full rounded-full bg-[#25CA85] flex items-center justify-center flex-row">
+              <FontAwesomeIcon icon={faCheck} className="text-white h-14" />{" "}
+            </div>
+          </div>
+          <h1 className="font-montserrat font-bold text-3xl">
+            Offer Request Is Succeful!
+          </h1>
+        </div>
       </div>
     );
   }

@@ -55,7 +55,8 @@ const handleLikedPets = async (petID: string, petOwnerUID: string, likedpetId: s
         await updateDoc(doc(db, "matches", matchDocId), {
           status: "matched",
           matchedWith: [matchedUserEmail, UserEmail], // Ensure unique entries
-          matchedPetWith: [matchedPetID, petID], // Ensure unique entries
+          matchedPetWith: [matchedPetID, petID],
+           // Ensure unique entries
         });
         console.log("Match successfully updated!");
         return true
