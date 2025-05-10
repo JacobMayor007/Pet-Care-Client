@@ -538,7 +538,7 @@ const UserNotification = () => {
         unsubscribe();
       }
     };
-  }, []);
+  }, [userUID, userEmail]);
 
   return (
     <div className="max-w-[500px] w-[482px] h-fit max-h-[542px] bg-white drop-shadow-lg rounded-xl justify-self-center flex flex-col  overflow-y-scroll">
