@@ -493,7 +493,7 @@ export default function Home() {
         {doctor.slice(0, 5).map((data) => {
           return (
             <Link
-              href={`/Profile/Doctor/${data?.User_UID}`}
+              href={`/Profile/Doctor/${data?.doctor_uid}`}
               key={data?.id}
               className="grid relative grid-rows-11 z-[1] gap-2 bg-[#006B95] rounded-lg px-3 py-4 drop-shadow-md cursor-pointer full w-72  select-none"
             >
