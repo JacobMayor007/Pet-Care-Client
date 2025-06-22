@@ -489,17 +489,6 @@ function DoctorProfile(props: { id: string }) {
           </span>
         )}
       </div>
-      {status[0]?.Appointment_Status !== "Paid" && (
-        <h1
-          className={`font-montserrat mt-16 mb-8 capitalize font-bold text-4xl flex flex-row 
-          justify-between`}
-        >
-          {doctor?.doctor_title} {doctor?.doctor_name}
-          <span className="bg-green-600 text-white px-7 text-2xl py-2 rounded-lg">
-            {status[0]?.Appointment_Status}
-          </span>
-        </h1>
-      )}
 
       <div className="p-4">
         <div className=" mb-8 flex flex-row items-center justify-between">
