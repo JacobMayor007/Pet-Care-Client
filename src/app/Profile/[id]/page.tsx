@@ -5,7 +5,13 @@ import { faEdit, faPlus, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import fetchUserData from "@/app/fetchData/fetchUserData";
 import { useEffect, useState } from "react";
-import { DocumentData } from "firebase/firestore";
+import {
+  collection,
+  DocumentData,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import dayjs, { Dayjs } from "dayjs";
 import {
   getMyPets,
@@ -18,6 +24,8 @@ import "@ant-design/v5-patch-for-react-19";
 import Link from "next/link";
 import Image from "next/image";
 import { Modal, Rate } from "antd";
+import { Requester } from "../../../../types";
+import { db } from "@/app/firebase/config";
 
 interface Order {
   id?: string;
@@ -129,6 +137,7 @@ export default function UserProfile() {
   const [listOfOrders, setListOfOrders] = useState<Order[]>([]);
   const [boardDetails, setBoardDetails] = useState<BoardDetails[]>([]);
   const [appointment, setAppointment] = useState<Appointment[]>([]);
+  const [myRequest, setMyRequest] = useState<Requester[]>([]);
   const [addNewPetModal, setAddNewPetModal] = useState(false);
   const [confirmAddNewPetModal, setConfirmAddNewPetModal] = useState(false);
   const [petName, setPetName] = useState("");
@@ -197,7 +206,44 @@ export default function UserProfile() {
     getMyAppointments();
   }, [userData]);
 
-  console.log();
+  useEffect(() => {
+    const getMyOffers = async () => {
+      try {
+        const docRef = collection(db, "requester");
+        const q = query(
+          docRef,
+          where("sitting_service_requester_id", "==", userData[0]?.User_UID)
+        );
+        const docSnap = await getDocs(q);
+
+        const result: Requester[] = docSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Requester, "id">),
+        }));
+
+        setMyRequest(
+          result.map((data) => ({
+            ...data,
+            sitting_service_startDate: data?.sitting_service_startDate
+              ? dayjs(data.sitting_service_startDate.toDate())
+              : null,
+            sitting_service_createdAt: data?.sitting_service_createdAt
+              ? dayjs(data.sitting_service_createdAt.toDate())
+              : null,
+            sitting_service_endDate: data?.sitting_service_endDate
+              ? dayjs(data.sitting_service_endDate.toDate())
+              : null,
+          }))
+        );
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    if (userData?.[0]?.User_UID) {
+      getMyOffers();
+    }
+  }, [userData]);
 
   useEffect(() => {
     const getMyBoard = async () => {
@@ -647,7 +693,85 @@ export default function UserProfile() {
         <h1 className="text-[#393939] text-2xl font-montserrat font-bold mt-8">
           Latest Offers
         </h1>
-        <div></div>
+        <div className="mt-8 bg-white drop-shadow-lg rounded-xl p-4  ">
+          <div className="grid grid-cols-5">
+            <h1
+              className={`${
+                rated ? `col-span-2` : `col-span-3`
+              } text-[#393939] font-medium font-hind text-xl`}
+            >
+              Offers
+            </h1>
+            <h1
+              className={`text-center text-[#393939] font-medium font-hind text-xl`}
+            >
+              Status
+            </h1>
+            <h1
+              className={`${
+                rated ? `block` : `hidden`
+              } text-center text-[#393939] font-medium font-hind text-xl`}
+            >
+              Rated
+            </h1>
+            <h1 className="col-span-5 h-0.5 bg-gray-500 rounded-full my-4"></h1>
+            {myRequest.length > 0 ? (
+              myRequest.slice(0, 3).map((data) => {
+                return (
+                  <div
+                    key={data?.id}
+                    className="relative col-span-5 grid grid-cols-5 h-fit p-8 gap-5 border-b-[1px] border-gray-400 mb-2"
+                  >
+                    <div className="text-center font-montserrat font-medium text-lg pt-4">
+                      Image Of {data?.sitting_service_requester_name}
+                    </div>
+                    <div className={`${rated ? `col-span-1` : `col-span-2`}`}>
+                      <h1 className="font-hind font-bold text-[#006B95]">
+                        {data?.sitting_service_requester_name}
+                      </h1>
+
+                      <h1 className="font-hind text-xl">
+                        Total: Php {data?.sitting_service_price}
+                      </h1>
+                    </div>
+                    <h1 className="text-center my-auto font-hind text-[#232323] text-xl font-semibold">
+                      {data?.sitting_service_status}
+                    </h1>
+                    <h1
+                      className={`${
+                        data?.sitting_service_feedback_and_rate?.rate === null
+                          ? `hidden`
+                          : ``
+                      }text-center my-auto`}
+                    >
+                      <Rate
+                        defaultValue={
+                          data?.sitting_service_feedback_and_rate?.rate
+                        }
+                        disabled
+                        className={`${
+                          data?.sitting_service_feedback_and_rate?.rate === null
+                            ? `hidden`
+                            : ``
+                        }text-center my-auto`}
+                      />
+                    </h1>
+                    <Link
+                      href={`/pc/sitter/${data?.id}`}
+                      className="absolute right-4 top-2 text-[#006B95] italic "
+                    >
+                      Click to show more details
+                    </Link>
+                  </div>
+                );
+              })
+            ) : (
+              <h1 className="text-[#393939] font-montserrat font-bold">
+                You have no ordered{" "}
+              </h1>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -228,7 +228,7 @@ const Product = ({ params }: AppointmentID) => {
         ATC_SellerID: product?.Seller_UserID,
       });
 
-      console.log("Add to Cart product has been succesful", addToCartItem);
+      console.log("Add to Cart product has been successful", addToCartItem);
       setLoading(false);
       setSuccessful(true);
     } catch (error) {
@@ -268,7 +268,7 @@ const Product = ({ params }: AppointmentID) => {
             </div>
           </div>
           <h1 className="font-montserrat font-bold text-3xl">
-            Offer Request Is Succeful!
+            Offer Request Is Successful!
           </h1>
         </div>
       </div>

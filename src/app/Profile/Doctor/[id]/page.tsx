@@ -460,7 +460,7 @@ function DoctorProfile(props: { id: string }) {
             </div>
           </div>
           <h1 className="font-montserrat font-bold text-3xl animate-bounce">
-            Offer Request Is Succeful!
+            Offer Request Is Successful!
           </h1>
         </div>
       </div>

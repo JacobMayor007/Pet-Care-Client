@@ -276,7 +276,7 @@ export default function ViewMemorial({ params }: MemorialId) {
             </div>
           </div>
           <h1 className="font-montserrat font-bold text-3xl">
-            Booking Memorial Is Succeful!
+            Booking Memorial Is Successful!
           </h1>
         </div>
       </div>

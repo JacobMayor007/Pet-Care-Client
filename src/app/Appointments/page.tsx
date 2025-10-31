@@ -33,15 +33,7 @@ import { getMyPets } from "./mypet";
 
 interface Doctor {
   id?: string;
-  User_Email?: string;
-  User_Name?: string;
-  User_UID?: string;
-  User_UserType?: string;
-  User_PNumber?: string;
-  User_TypeOfAppointment?: [string];
-  User_AvailableHours?: {
-    Days?: [number];
-  };
+
   doctor_details?: string;
   doctor_available_days?: [];
   doctor_clinicAddress?: string;
@@ -340,7 +332,7 @@ export default function Doctors() {
   //   .map((user) => `${user?.User_FName} ${user?.User_LName}`)
   //   .join(",");
 
-  const onSubmit = async (id: string, petID: string) => {
+  const onSubmit = async (petID: string) => {
     const fullName = userData[0]?.User_Name;
 
     try {
@@ -352,45 +344,41 @@ export default function Doctors() {
 
       const appointmentDate = Timestamp.fromDate(
         dayjs.isDayjs(userAppointmentDate)
-          ? userAppointmentDate.toDate() // Convert Dayjs to Date
-          : new Date(userAppointmentDate) // Convert to Date if it's a string
+          ? userAppointmentDate.toDate()
+          : new Date(userAppointmentDate)
       );
 
-      const matchingDoctor = doctor.find((data) => data?.User_UID === id);
       const selectedPet = myPets.find((data) => data?.id === petID);
-      if (!matchingDoctor) {
-        throw new Error("Matching doctor not found.");
-      }
 
       const patientUserUID = userData[0]?.User_UID || "";
+
       const docRef = collection(db, "appointments");
       const docNotifRef = collection(db, "notifications");
-      // Check if the patient is new or old
+
       const q = query(
         docRef,
-        where("Appointment_DoctorUID", "==", matchingDoctor.User_UID),
+        where("Appointment_DoctorUID", "==", selectedDoctor?.doctor_uid),
         where("Appointment_PatientUserUID", "==", patientUserUID)
       );
       const querySnapshot = await getDocs(q);
 
-      const isNewPatient = querySnapshot.empty; // If no prior appointments, the patient is new
+      const isNewPatient = querySnapshot.empty;
 
-      // Add the appointment to Firestore
       const addAppointments = await addDoc(docRef, {
         Appointment_PatientFullName: fullName,
         Appointment_CreatedAt: Timestamp.now(),
         Appointment_PatientUserUID: patientUserUID,
-        Appointment_DoctorEmail: matchingDoctor?.doctor_email,
-        Appointment_DoctorName: matchingDoctor?.doctor_name,
+        Appointment_DoctorEmail: selectedDoctor?.doctor_email,
+        Appointment_DoctorName: selectedDoctor?.doctor_name,
         Appointment_TypeOfAppointment: userAppointment,
         Appointment_Date: appointmentDate,
-        Appointment_DoctorUID: matchingDoctor.doctor_uid,
-        Appointment_Location: matchingDoctor.doctor_clinicAddress,
-        Appointment_DoctorPNumber: matchingDoctor.doctor_email,
-        Appointment_Price: matchingDoctor?.doctor_standard_fee,
+        Appointment_DoctorUID: selectedDoctor?.doctor_uid,
+        Appointment_Location: selectedDoctor?.doctor_clinicAddress,
+        Appointment_DoctorPNumber: selectedDoctor?.doctor_contact,
+        Appointment_Price: selectedDoctor?.doctor_standard_fee,
         Appointment_PatientPetAge: {
           Year: selectedPet ? selectedPet?.pet_age?.year : petYear,
-          Month: selectedPet ? selectedPet.pet_age?.month : petMonth,
+          Month: selectedPet ? selectedPet?.pet_age?.month : petMonth,
         },
         Appointment_PatientPetBreed: selectedPet
           ? selectedPet?.pet_breed
@@ -410,32 +398,28 @@ export default function Doctors() {
         Appointment_IsNewPatient: isNewPatient,
       });
 
-      const notifAppointments = await addDoc(docNotifRef, {
+      await addDoc(docNotifRef, {
         appointment_ID: addAppointments.id,
         createdAt: Timestamp.now(),
-        receiverID: matchingDoctor.User_UID,
+        receiverID: selectedDoctor?.doctor_uid, // ✅ corrected
         hide: false,
-        message: `${fullName} requesting to have a schedule`,
+        message: `${fullName} requested to have a schedule`,
         senderID: patientUserUID,
         open: false,
         status: "unread",
-        title: `Appointment Request with ${matchingDoctor?.User_UID}`,
+        title: `Appointment Request with ${selectedDoctor?.doctor_name}`,
         type: userAppointment,
         sender_FullName: fullName,
-        receiver_FullName: matchingDoctor?.User_Name,
+        receiver_FullName: selectedDoctor?.doctor_name,
         isApprove: false,
       });
 
-      console.log("Appointment added:");
-
-      // Log whether the patient is new or old
+      console.log("✅ Appointment and notification added successfully!");
       console.log(
         isNewPatient ? "New patient added." : "Old patient appointment added."
       );
-
-      console.log("New notification added", notifAppointments);
     } catch (error) {
-      console.log("Error adding data to Firebase:", error);
+      console.error("❌ Error adding data to Firebase:", error);
     } finally {
       setLoading(false);
     }
@@ -743,7 +727,7 @@ export default function Doctors() {
                 }}
                 onCancel={() => {
                   setModal(false);
-                  console.log(selectedDoctor?.User_UID);
+                  console.log(selectedDoctor?.doctor_uid);
                 }}
                 centered
               >
@@ -949,15 +933,12 @@ export default function Doctors() {
                 open={confirmModal}
                 onCancel={() => setConfirmModal(false)}
                 onOk={() => {
-                  onSubmit(
-                    selectedDoctor?.User_UID || "",
-                    selectedPet?.id || ""
-                  );
+                  onSubmit(selectedPet?.id || "");
                   setConfirmModal(false);
                 }}
                 centered={true}
               >
-                Please confirm your appointment on {selectedDoctor?.User_Name}
+                Please confirm your appointment on {selectedDoctor?.doctor_name}
               </Modal>
             </div>
           )}

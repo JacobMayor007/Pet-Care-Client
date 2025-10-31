@@ -275,19 +275,6 @@ export default function ClientNavbar() {
           </li>
 
           <li className="relative h-14 flex items-center justify-center group">
-            <div
-              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center cursor-pointer"
-              onClick={() => {
-                latestChats();
-              }}
-            >
-              <FontAwesomeIcon icon={faMessage} />
-              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
-                Inbox
-              </span>
-            </div>
-          </li>
-          <li className="relative h-14 flex items-center justify-center group">
             <Link
               href="/pc/memorial"
               className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center"
@@ -310,6 +297,19 @@ export default function ClientNavbar() {
                 Pet Sitter
               </span>
             </Link>
+          </li>
+          <li className="relative h-14 flex items-center justify-center group">
+            <div
+              className="font-montserrat text-base text-[#006B95] font-bold flex flex-col items-center cursor-pointer"
+              onClick={() => {
+                latestChats();
+              }}
+            >
+              <FontAwesomeIcon icon={faMessage} />
+              <span className="absolute top-full mt-2 bg-white text-[#006B95] text-sm font-medium px-3 py-1 rounded shadow-md opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 pointer-events-none">
+                Inbox
+              </span>
+            </div>
           </li>
         </ul>
         <div className="flex items-center gap-4" ref={btnRef}>

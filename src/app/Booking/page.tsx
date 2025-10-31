@@ -85,7 +85,7 @@ export default function Booking() {
         <h1 className="font-montserrat text-5xl font-bold">Booking</h1>
         <p className="font-montserrat text-base">
           Choose from our selection of quality rooms made for your wonderful
-          pets.{" "}
+          pets.
         </p>
         <p className="italic font-montserrat text-xs">Rates may apply*</p>
 
@@ -113,35 +113,41 @@ export default function Booking() {
 
                   <div className="border-b-2 border-gray-300 mb-4" />
                   <div className="grid grid-cols-7">
+                    {/* ✅ FIXED FEATURES SECTION */}
                     <div className="col-span-2">
                       <h1 className="font-montserrat text-xl text-white font-bold">
                         Features:
                       </h1>
-                      {room.map((data) => {
-                        const features = data?.Renter_RoomFeatures
-                          ? JSON.parse(data.Renter_RoomFeatures)
-                          : [];
+                      {(() => {
+                        let features: {
+                          id: string;
+                          name: string;
+                          price: string;
+                        }[] = [];
+                        try {
+                          features = data?.Renter_RoomFeatures
+                            ? JSON.parse(data.Renter_RoomFeatures)
+                            : [];
+                        } catch (error) {
+                          console.error("Error parsing features:", error);
+                        }
+
                         return (
-                          <ul key={data?.id} className="">
+                          <ul>
                             {Array.isArray(features) &&
-                              features.map(
-                                (feature: {
-                                  id: string;
-                                  name: string;
-                                  price: string;
-                                }) => (
-                                  <li
-                                    key={feature.id}
-                                    className="font-montserrat text-white text-base font-medium "
-                                  >
-                                    {feature.name} - Php {feature.price}
-                                  </li>
-                                )
-                              )}{" "}
+                              features.map((feature) => (
+                                <li
+                                  key={feature.id}
+                                  className="font-montserrat text-white text-base font-medium"
+                                >
+                                  {feature.name} - Php {feature.price}
+                                </li>
+                              ))}
                           </ul>
                         );
-                      })}
+                      })()}
                     </div>
+
                     <div className="col-span-5 flex justify-end">
                       <div className="h-fit flex flex-col">
                         <h1 className="font-montserrat text-white font-bold text-2xl">

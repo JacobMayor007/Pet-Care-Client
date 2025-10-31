@@ -288,7 +288,7 @@ export default function SitterCustomer({ params }: MyOfferID) {
               <FontAwesomeIcon icon={faCheck} className="text-white h-14" />{" "}
             </div>
           </div>
-          <h1 className="font-montserrat font-bold text-3xl">Succeful!</h1>
+          <h1 className="font-montserrat font-bold text-3xl">Successful!</h1>
         </div>
       </div>
     );
@@ -315,6 +315,11 @@ export default function SitterCustomer({ params }: MyOfferID) {
             <h1 className="font-montserrat font-bold text-[#006B95] underline">
               Status: {requester?.sitting_service_status}
             </h1>
+            {requester?.sitting_service_status === "approved" && (
+              <h1 className="text-slate-500 italic text-xs">
+                Wait for the pet sitter to confirm you have been paid
+              </h1>
+            )}
           </div>
           {requester?.sitting_service_feedback_and_rate?.feedback && (
             <p className="m-auto font-hind text-base font-semibold italic underline">

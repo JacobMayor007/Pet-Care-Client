@@ -310,7 +310,7 @@ export default function Sitter({ params }: SitterID) {
             </div>
           </div>
           <h1 className="font-montserrat font-bold text-3xl">
-            Offer Request Is Succeful!
+            Offer Request Is Successful!
           </h1>
         </div>
       </div>

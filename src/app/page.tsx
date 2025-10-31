@@ -14,6 +14,7 @@ import fetchDoctor from "./fetchData/fetchDoctor";
 import Link from "next/link";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase/config";
+import { useRouter } from "next/navigation";
 
 interface Product {
   id: string;
@@ -132,12 +133,15 @@ export default function Home() {
   const [doctorID, setDoctorID] = useState("");
   const [memorial, setMemorial] = useState<Memorial[]>([]);
   const [sitter, setSitter] = useState<Sitters[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUserID(user.uid);
+      } else {
+        router.push("/Login");
       }
     });
 

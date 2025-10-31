@@ -20,10 +20,10 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [loginAs, setLoginAs] = useState("Pet Owner");
   const [loginAsDropDown, setLoginAsDropDown] = useState(false);
-  const [userType, setUserType] = useState("client");
+  const [userType, setUserType] = useState("Users");
 
   const loginAsData = [
-    { key: 0, label: "Pet Owner", type: "client", route: "/Login" },
+    { key: 0, label: "Pet Owner", type: "Users", route: "/Login" },
     {
       key: 1,
       label: "Pet Product Seller",
@@ -189,6 +189,7 @@ export default function Login() {
       console.error(error);
     }
   };
+
 
   return (
     <div className="bg-login h-screen flex justify-center items-center relative">

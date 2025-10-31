@@ -381,9 +381,16 @@ export default function Room({ params }: RoomID) {
     getMyStatus();
   }, [id, userData, roomStatus]);
 
-  const features: Feature[] = room?.Renter_RoomFeatures
-    ? JSON.parse(room?.Renter_RoomFeatures)
-    : [];
+  const features: Feature[] = (() => {
+    try {
+      const data = room?.Renter_RoomFeatures;
+      if (!data) return [];
+      return typeof data === "string" ? JSON.parse(data) : data;
+    } catch (error) {
+      console.error("Invalid JSON in Renter_RoomFeatures:", error);
+      return [];
+    }
+  })();
 
   const options = features.map((feature: Feature) => ({
     value: feature.price,
