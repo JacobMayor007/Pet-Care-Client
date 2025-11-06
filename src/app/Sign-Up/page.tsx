@@ -206,7 +206,7 @@ export default function SignUp() {
 
   return (
     <>
-      <div className="xl:h-full 2xl:h-screen bg-signUp flex flex-row">
+      <div className="xl:h-screen bg-signUp flex flex-row">
         <div className="w-[30%]">
           <h1 className="text-5xl font-sigmar font-normal text-white mt-20 text-center">
             Pet Care Pro

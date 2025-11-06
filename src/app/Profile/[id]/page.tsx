@@ -424,7 +424,7 @@ export default function UserProfile() {
                   htmlFor="pet-type"
                   className="font-montserrat font-bold text-[#393939] text-lg"
                 >
-                  Pet Type
+                  Animal Type
                 </label>
                 <input
                   type="text"

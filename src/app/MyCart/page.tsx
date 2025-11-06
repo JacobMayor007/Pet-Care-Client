@@ -8,12 +8,13 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
   DocumentData,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import fetchUserData from "../fetchData/fetchUserData";
 import { MinusOutlined, PlusOutlined } from "@ant-design/icons";
+
 interface CartItem {
   id: string;
   ATC_BuyerFullName?: string;
@@ -46,26 +47,30 @@ export default function MyCart() {
   useEffect(() => {
     if (!userData[0]?.User_UID) return;
 
-    const q = query(
-      collection(db, "AddToCart"),
-      where("ATC_BuyerID", "==", userData[0]?.User_UID)
-    );
+    const getMyCart = async () => {
+      try {
+        setLoading(true);
 
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const items: CartItem[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        items.push({
+        const q = query(
+          collection(db, "AddToCart"),
+          where("ATC_BuyerID", "==", userData[0]?.User_UID)
+        );
+
+        const querySnapshot = await getDocs(q);
+        const myCart: CartItem[] = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...data,
-          ATC_OrderAt: data.ATC_OrderAt?.toDate(), // Convert Firestore timestamp to Date
-        } as CartItem);
-      });
-      setCartItems(items);
-      setLoading(false);
-    });
+          ...doc.data(),
+        })) as CartItem[];
 
-    return () => unsubscribe();
+        setCartItems(myCart);
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getMyCart();
   }, [userData]);
 
   useEffect(() => {
@@ -127,11 +132,9 @@ export default function MyCart() {
                     {item.ATC_Products?.ATC_ProductName}
                   </h1>
                 </div>
-
                 <div className=" flex flex-col gap-0.5">
                   <p className="font-hind text-lg">{item.ATC_SellerFullName}</p>
                 </div>
-
                 <div className="justify-self-center font-hind text-[#232323] text-xl font-medium">
                   Php {item.ATC_Products?.ATC_ProductPrice}
                 </div>

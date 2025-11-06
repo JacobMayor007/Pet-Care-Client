@@ -17,6 +17,8 @@ import { useRouter } from "next/navigation";
 import {
   addDoc,
   collection,
+  doc,
+  getDoc,
   // doc,
   // getDoc,
   getDocs,
@@ -131,6 +133,7 @@ export default function FoundMyBuddy({ params }: petId) {
   const [toMatchModal, setToMatchModal] = useState(false);
   const [registerModal, setRegisterModal] = useState(false);
   const [currentPet, setCurrentPet] = useState<ThisPet[]>([]);
+  const [thisPet, setThisPet] = useState<ThisPet | null>(null);
   // const [dropdownSex, setDropdownSex] = useState(false);
   const [selectedSex, setSelectedSex] = useState("");
   const [selectedBreed, setSelectedBreed] = useState("");
@@ -172,6 +175,29 @@ export default function FoundMyBuddy({ params }: petId) {
       }
     };
     getCurrentPet();
+  }, [id]);
+
+  useEffect(() => {
+    const getThisPet = async () => {
+      try {
+        console.log("Id: ", id);
+
+        const docRef = doc(db, "pets", id);
+
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data() as ThisPet;
+          setThisPet({ ...data, id: docSnap.id });
+        } else {
+          console.log("No such document!");
+          setThisPet(null);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getThisPet();
   }, [id]);
 
   useEffect(() => {
@@ -301,15 +327,13 @@ export default function FoundMyBuddy({ params }: petId) {
     getPetsToMatch();
   }, [userUID, id, currentPet]);
 
-  console.log(currentPet);
-
   const myHeartedPets = async (likedPetId: string) => {
     try {
       setLoading(true);
       const data = petToMatch.length;
       const randomizedData = Math.floor(Math.random() * data);
       setCurrentIndex(randomizedData);
-      handleLikedPets(id, userUID, likedPetId, userEmail);
+      await handleLikedPets(id, userUID, likedPetId, userEmail);
     } catch (error) {
       console.error(error);
     } finally {
@@ -390,15 +414,15 @@ export default function FoundMyBuddy({ params }: petId) {
       setLoading(true);
       const docRef = collection(db, "pet-to-match");
       const result = await addDoc(docRef, {
-        pet_UID: currentPet[0]?.id,
-        pet_age: currentPet[0]?.pet_age,
-        pet_breed: currentPet[0]?.pet_breed,
-        pet_name: currentPet[0]?.pet_name,
-        pet_ownerEmail: currentPet[0]?.pet_ownerEmail,
-        pet_ownerName: currentPet[0]?.pet_ownerName,
-        pet_ownerUID: currentPet[0]?.pet_ownerUID,
-        pet_sex: currentPet[0]?.pet_sex,
-        pet_type: currentPet[0]?.pet_type,
+        pet_UID: thisPet?.id,
+        pet_age: thisPet?.pet_age,
+        pet_breed: thisPet?.pet_breed,
+        pet_name: thisPet?.pet_name,
+        pet_ownerEmail: thisPet?.pet_ownerEmail,
+        pet_ownerName: thisPet?.pet_ownerName,
+        pet_ownerUID: thisPet?.pet_ownerUID,
+        pet_sex: thisPet?.pet_sex,
+        pet_type: thisPet?.pet_type,
         preferred_animal: selectedAnimal.toLocaleLowerCase(),
         preferred_breed: selectedBreed.toLocaleLowerCase(),
         preferred_sex: selectedSex.toLocaleLowerCase(),
@@ -411,6 +435,7 @@ export default function FoundMyBuddy({ params }: petId) {
     } finally {
       setInterval(() => {
         setLoading(false);
+        window.location.reload();
       }, 3000);
     }
   };
@@ -552,7 +577,7 @@ export default function FoundMyBuddy({ params }: petId) {
       </nav>
 
       <Modal
-        open={currentPet?.length > 0 ? false : true}
+        open={currentPet.length > 0 ? false : true}
         onCancel={() => history.back()}
         onClose={() => history.back()}
         onOk={() => {

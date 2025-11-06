@@ -37,7 +37,7 @@ interface BoardDetails {
     {
       label?: string;
       name?: string;
-      value?: number;
+      value?: string | number;
     }
   ];
   BC_BoarderDays?: number;
@@ -61,6 +61,10 @@ interface BoardDetails {
   BC_TypeOfPayment?: string;
 }
 
+interface Value {
+  features?: number[];
+}
+
 export default function MyRooms({ params }: RoomID) {
   const { id } = React.use(params);
   const [boardDetails, setBoardDetails] = useState<BoardDetails | null>(null);
@@ -68,6 +72,8 @@ export default function MyRooms({ params }: RoomID) {
   const descriptor = ["terrible", "bad", "normal", "good", "wonderful"];
   const [star, setStar] = useState(0);
   const [feedback, setFeedback] = useState("");
+  const [featureValue, setFeatureValue] = useState<Value | null>(null);
+  const [totalPrice, setTotalPrice] = useState<number | null>(null);
 
   useEffect(() => {
     const Myrooms = async () => {
@@ -104,6 +110,28 @@ export default function MyRooms({ params }: RoomID) {
 
     Myrooms();
   }, [id]);
+
+  useEffect(() => {
+    if (boardDetails?.BC_BoarderChoiceFeature) {
+      // Convert string values to numbers safely
+      const featureValues = boardDetails.BC_BoarderChoiceFeature.map((data) =>
+        data?.value ? Number(data.value) : 0
+      ).filter((value) => !isNaN(value)); // ✅ filter out NaN
+
+      setFeatureValue({ features: featureValues });
+    }
+  }, [boardDetails]);
+
+  useEffect(() => {
+    const totalFeatureValue =
+      featureValue?.features?.reduce((a, b) => a + b, 0) || 0;
+
+    const renterPrice = Number(boardDetails?.BC_RenterPrice) || 0;
+
+    const total = totalFeatureValue + renterPrice;
+
+    setTotalPrice(total);
+  }, [featureValue, boardDetails?.BC_RenterPrice]);
 
   const feedbackHandle = async () => {
     try {
@@ -249,7 +277,7 @@ export default function MyRooms({ params }: RoomID) {
             </p>
           </div>
           <h1 className="my-auto text-center font-bold font-montserrat text-[#393939]">
-            Php {boardDetails?.BC_BoarderTotalPrice}
+            Php {totalPrice}
           </h1>
           <h1 className="my-auto text-center font-bold font-montserrat text-[#006B95]">
             {boardDetails?.BC_BoarderStatus}

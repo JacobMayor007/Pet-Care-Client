@@ -46,7 +46,6 @@ interface Doctor {
   doctor_pet_types_treated?: [];
   doctor_rating?: number;
   doctor_specialty?: string;
-  doctor_standard_fee?: number;
   doctor_sub_specialty?: string;
   doctor_time_in?: string;
   doctor_time_out?: string;
@@ -375,7 +374,6 @@ export default function Doctors() {
         Appointment_DoctorUID: selectedDoctor?.doctor_uid,
         Appointment_Location: selectedDoctor?.doctor_clinicAddress,
         Appointment_DoctorPNumber: selectedDoctor?.doctor_contact,
-        Appointment_Price: selectedDoctor?.doctor_standard_fee,
         Appointment_PatientPetAge: {
           Year: selectedPet ? selectedPet?.pet_age?.year : petYear,
           Month: selectedPet ? selectedPet?.pet_age?.month : petMonth,

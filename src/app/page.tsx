@@ -321,6 +321,45 @@ export default function Home() {
           />
         </div>
       </div>
+      <div className="w-full grid grid-cols-3 gap-5 px-32 my-4">
+        <div className="col-span-3 flex flex-row justify-between items-center">
+          <h1 className="font-montserrat text-3xl text-[#393939] font-bold my-4">
+            Rooms
+          </h1>
+          <Link
+            href="/Booking"
+            className="text-sm font-montserrat font-bold italic text-[#4ABEC5] flex flex-col gap-1"
+          >
+            View List Room
+            <span className="w-full h-1 rounded-full bg-[#4ABEC5]" />
+          </Link>
+        </div>
+        {room.slice(0, 5).map((data) => {
+          return (
+            <Link
+              href={`/Booking/${data?.id}`}
+              key={data?.id}
+              className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-md cursor-pointer h-64 w-72 transform transition-all active:scale-95 ease-out duration-50 select-none"
+            >
+              <div className="flex justify-center row-span-5">
+                <FontAwesomeIcon icon={faFileShield} className="text-8xl" />
+              </div>
+              <div className="font-hind text-xs text-[#565656]">
+                {data?.Renter_UserFullName}
+              </div>
+              <div className="row-span-2 text-ellipsis font-hind text-sm text-[#565656] font-semibold">
+                {data?.Renter_RoomName || "Room Name"}{" "}
+              </div>
+              <div className="font-hind text-sm text-[#565656] font-semibold">
+                Php {data?.Renter_RoomPrice || "Price"}
+              </div>
+              <button className="row-span-2 bg-blue-500 text-white font-hind rounded-md">
+                View Room
+              </button>
+            </Link>
+          );
+        })}
+      </div>
       <div className="flex flex-col gap-5 px-32 py-5  z-0">
         <div className="w-full grid grid-cols-5 gap-5 ">
           <div className="col-span-5 flex flex-row justify-between items-center">
@@ -440,45 +479,6 @@ export default function Home() {
             );
           })}
         </div>
-      </div>
-      <div className="w-full grid grid-cols-3 gap-5 px-32 my-4">
-        <div className="col-span-3 flex flex-row justify-between items-center">
-          <h1 className="font-montserrat text-3xl text-[#393939] font-bold my-4">
-            Rooms
-          </h1>
-          <Link
-            href="/Booking"
-            className="text-sm font-montserrat font-bold italic text-[#4ABEC5] flex flex-col gap-1"
-          >
-            View List Room
-            <span className="w-full h-1 rounded-full bg-[#4ABEC5]" />
-          </Link>
-        </div>
-        {room.slice(0, 5).map((data) => {
-          return (
-            <Link
-              href={`/Booking/${data?.id}`}
-              key={data?.id}
-              className="grid grid-rows-11 z-[1] gap-2 bg-white rounded-lg px-3 py-4 hover:border-blue-500 hover:border-[1px] drop-shadow-md cursor-pointer h-64 w-72 transform transition-all active:scale-95 ease-out duration-50 select-none"
-            >
-              <div className="flex justify-center row-span-5">
-                <FontAwesomeIcon icon={faFileShield} className="text-8xl" />
-              </div>
-              <div className="font-hind text-xs text-[#565656]">
-                {data?.Renter_UserFullName}
-              </div>
-              <div className="row-span-2 text-ellipsis font-hind text-sm text-[#565656] font-semibold">
-                {data?.Renter_RoomName || "Room Name"}{" "}
-              </div>
-              <div className="font-hind text-sm text-[#565656] font-semibold">
-                Php {data?.Renter_RoomPrice || "Price"}
-              </div>
-              <button className="row-span-2 bg-blue-500 text-white font-hind rounded-md">
-                View Room
-              </button>
-            </Link>
-          );
-        })}
       </div>
 
       <div className="w-full grid grid-cols-3 gap-5 px-32 mb-8 my-16 ">

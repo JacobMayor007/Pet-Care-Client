@@ -72,7 +72,6 @@ const Product = ({ params }: AppointmentID) => {
   const router = useRouter();
   const auth = getAuth();
   const [addToCart, setAddToCart] = useState(false);
-  const shippingFee = 100;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -237,13 +236,6 @@ const Product = ({ params }: AppointmentID) => {
 
     setAddToCart(false);
   };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("Stock", quantity.toString());
-      localStorage.setItem("Shipping Fee", shippingFee.toString());
-    }
-  }, [id, quantity, shippingFee]);
 
   // Display loading screen
   if (loading) {

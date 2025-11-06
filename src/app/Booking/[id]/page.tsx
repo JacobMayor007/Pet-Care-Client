@@ -236,21 +236,35 @@ export default function Room({ params }: RoomID) {
     try {
       setLoadingPage(true);
 
-      const docRef = doc(db, "board", id); // Replace "products" with your collection name
+      const docRef = doc(db, "board", id);
       const docSnap = await getDoc(docRef);
 
       console.log("Room: ", docSnap);
 
       if (docSnap.exists()) {
-        // Spread all fields into the Product type and update state
         const fetchedRoom = { id: docSnap.id, ...docSnap.data() } as Room;
         setRoom(fetchedRoom);
-        if (typeof fetchedRoom.Renter_PaymentMethod === "string") {
-          setTypeOfPaymentArray(
-            fetchedRoom.Renter_PaymentMethod.split(/\s*,\s*/)
-          );
-        } else if (Array.isArray(fetchedRoom.Renter_PaymentMethod)) {
-          setTypeOfPaymentArray(fetchedRoom.Renter_PaymentMethod);
+
+        const method = fetchedRoom.Renter_PaymentMethod as
+          | string
+          | string[]
+          | undefined;
+
+        if (typeof method === "string") {
+          // Case 1: Single string like "Cash On Hand, GCash"
+          setTypeOfPaymentArray(method.split(",").map((m: string) => m.trim()));
+        } else if (Array.isArray(method)) {
+          if (
+            method.length === 1 &&
+            typeof method[0] === "string" &&
+            method[0].includes(",")
+          ) {
+            setTypeOfPaymentArray(
+              method[0].split(",").map((m: string) => m.trim())
+            );
+          } else {
+            setTypeOfPaymentArray(method.map((m: string) => m.trim()));
+          }
         } else {
           setTypeOfPaymentArray([]);
         }

@@ -60,9 +60,3 @@ const fetchIDAppointment = async (
 };
 
 export default fetchIDAppointment;
-
-
-
-
-
-
