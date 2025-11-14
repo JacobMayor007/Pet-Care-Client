@@ -251,7 +251,6 @@ export default function Room({ params }: RoomID) {
           | undefined;
 
         if (typeof method === "string") {
-          // Case 1: Single string like "Cash On Hand, GCash"
           setTypeOfPaymentArray(method.split(",").map((m: string) => m.trim()));
         } else if (Array.isArray(method)) {
           if (

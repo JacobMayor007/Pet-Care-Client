@@ -389,7 +389,11 @@ export default function Home() {
                   {data?.Seller_UserFullName}
                 </div>
                 <div className="row-span-2 text-ellipsis font-hind text-sm text-[#565656] font-semibold">
-                  {data?.Seller_ProductName || "Product Name"}{" "}
+                  {data?.Seller_ProductName
+                    ? data.Seller_ProductName.length > 28
+                      ? `${data.Seller_ProductName.slice(0, 28)}...`
+                      : data.Seller_ProductName
+                    : ""}
                 </div>
                 <div className="font-hind text-sm text-[#565656] font-semibold">
                   Php {data?.Seller_ProductPrice || "Price"}
@@ -428,7 +432,11 @@ export default function Home() {
                   {data?.Seller_UserFullName}
                 </div>
                 <div className="row-span-2 text-ellipsis font-hind text-sm text-[#565656] font-semibold">
-                  {data?.Seller_ProductName || "Product Name"}{" "}
+                  {data?.Seller_ProductName
+                    ? data.Seller_ProductName.length > 28
+                      ? `${data.Seller_ProductName.slice(0, 28)}...`
+                      : data.Seller_ProductName
+                    : ""}
                 </div>
                 <div className="font-hind text-sm text-[#565656] font-semibold">
                   Php {data?.Seller_ProductPrice || "Price"}
@@ -467,7 +475,11 @@ export default function Home() {
                   {data?.Seller_UserFullName}
                 </div>
                 <div className="row-span-2 text-ellipsis font-hind text-sm text-[#565656] font-semibold">
-                  {data?.Seller_ProductName || "Product Name"}{" "}
+                  {data?.Seller_ProductName
+                    ? data.Seller_ProductName.length > 28
+                      ? `${data.Seller_ProductName.slice(0, 28)}...`
+                      : data.Seller_ProductName
+                    : ""}
                 </div>
                 <div className="font-hind text-sm text-[#565656] font-semibold">
                   Php {data?.Seller_ProductPrice || "Price"}
