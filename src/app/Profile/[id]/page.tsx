@@ -464,7 +464,7 @@ export default function UserProfile() {
             onClose={() => {
               setConfirmAddNewPetModal(false);
             }}
-            onOk={() => {
+            onOk={async () => {
               submitPetHandle(
                 petName,
                 petYear,
@@ -476,7 +476,7 @@ export default function UserProfile() {
                 userData[0]?.User_Email,
                 userData[0]?.User_Name
               );
-              setConfirmAddNewPetModal(false);
+              await setConfirmAddNewPetModal(false);
               window.location.reload();
             }}
           >
